@@ -75,8 +75,8 @@ namespace DashZonaCriativa
                             }
 
                             var command = objConx.CreateCommand();
-                            command.CommandText = "INSERT INTO PRODUTOS (PRODUTO,COD_PRODUTO,DESCRICAO1,REFERENCIA,COD_EST,ESTAMPA,COD_COR,COR,TAMANHO,COD_NCM,DEPARTAMENTOS,DIVISAO,GRUPO,TIPO,COLECAO,SUBCOLECAO,MARCA,CATEGORIA,STATUS,QMM,ALTURA,LARGURA,COMPRIMENTO,PEDIDO_BLOQUEADO,VENDA_BLOQUEADO,EAN13,ESTOQUE_09,ESTOQUE_11,ESTOQUE_500)" +
-                                                        $"VALUES({prof.Produto}," + $"\"{prof.CodProduto}\", " + $"\"{prof.Descricao1}\", " + $"\"{prof.Referencia}\", " + $"\"{prof.CodEst}\", " + $"\"{prof.Estampa}\", " + $"\"{prof.CodCor}\", " + $"\"{prof.Cor}\", " + $"\"{prof.Tamanho}\", "
+                            command.CommandText = "INSERT INTO PRODUTOS (PRODUTO,COD_PRODUTO,DESCRICAO1,REFERENCIA,ESTAMPA,COR,TAMANHO,COD_NCM,DEPARTAMENTOS,DIVISAO,GRUPO,TIPO,COLECAO,SUBCOLECAO,MARCA,CATEGORIA,STATUS,QMM,ALTURA,LARGURA,COMPRIMENTO,PEDIDO_BLOQUEADO,VENDA_BLOQUEADO,EAN13,ESTOQUE_09,ESTOQUE_11,ESTOQUE_500)" +
+                                                        $"VALUES({prof.Produto}," + $"\"{prof.CodProduto}\", " + $"\"{prof.Descricao1}\", " + $"\"{prof.Referencia}\", " + $"\"{prof.Estampa}\", " + $"\"{prof.Cor}\", " + $"\"{prof.Tamanho}\", "
                                                                  + $"\"{prof.CodNcm}\", " + $"\"{prof.Departamentos}\", " + $"\"{prof.Divisao}\", " + $"\"{prof.Grupo}\", " + $"\"{prof.Tipo}\", " + $"\"{prof.Colecao}\", " + $"\"{prof.Subcolecao}\", " + $"\"{prof.Marca}\", "
                                                                  + $"\"{prof.Categoria}\", " + $"\"{prof.Status}\", " + $"\"{prof.Qmm}\", " + $"\"{prof.Altura}\", " + $"\"{prof.Largura}\", " + $"\"{prof.Comprimento}\", " + $"\"{prof.PedidoBloqueado}\", " + $"\"{prof.VendaBloqueado}\", " + $"\"{prof.Ean13}\", " + $"\"{prof.Estoque09}\", " + $"\"{prof.Estoque11}\", " + $"\"{prof.Estoque500}\")";
 

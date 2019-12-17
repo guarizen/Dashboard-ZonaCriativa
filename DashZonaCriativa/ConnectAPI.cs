@@ -5,7 +5,6 @@ using System.Net;
 using System.Text;
 using Newtonsoft.Json;
 using System.IO;
-using FaturamentoAutomatico;
 
 namespace DashZonaCriativa
 {
