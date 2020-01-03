@@ -19,6 +19,14 @@ namespace DashZonaCriativa
     {
         static void Main(string[] args)
         {
+            //Buscar se existe a pasta.
+            string FileLog = @"C:\Dashboard-Log\";
+            if (!File.Exists(FileLog))
+            {
+                //Criar Diretório de Log
+                Directory.CreateDirectory(FileLog);
+            }
+
             //ConnectAPI api = new ConnectAPI();
             var ConnectMySQLDB = ConfigurationManager.AppSettings["ConnectMySQLDB"];
             var DatabaseMySQLDB = ConfigurationManager.AppSettings["DatabaseMySQLDB"];
@@ -34,10 +42,28 @@ namespace DashZonaCriativa
             var ConnectProdutosEventos = ConfigurationManager.AppSettings["ConnectProdutosEventos"];
             var Authorization = ConfigurationManager.AppSettings["Authorization"];
 
-
             //Buscar Produtos e Incluir no Banco de dados MySQL.
             try
             {
+                MySqlConnection objConx0 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                objConx0.Open();
+
+                var command0 = objConx0.CreateCommand();
+                command0.CommandText = "SELECT COUNT(*) AS N FROM PRODUTOS";
+                var retcommnad = command0.ExecuteReaderAsync();
+                string fault = retcommnad.Status.ToString();
+
+                if (fault == "Faulted")
+                {
+                    var commandinsert1 = objConx0.CreateCommand();
+                    commandinsert1.CommandText = "CREATE TABLE PRODUTOS (PRODUTO INT NOT NULL,COD_PRODUTO VARCHAR(30),DESCRICAO1 VARCHAR(255),REFERENCIA VARCHAR(255),ESTAMPA VARCHAR(255),COR VARCHAR(255),TAMANHO VARCHAR(5),COD_NCM VARCHAR(15),DEPARTAMENTOS VARCHAR(255),"
+                                                 + "DIVISAO VARCHAR(255),GRUPO VARCHAR(255),TIPO VARCHAR(255),COLECAO VARCHAR(255),SUBCOLECAO VARCHAR(255),MARCA VARCHAR(255),CATEGORIA VARCHAR(255),STATUS VARCHAR(255),QMM INT,ALTURA VARCHAR(10),LARGURA VARCHAR(10),"
+                                                 + "COMPRIMENTO VARCHAR(10),PEDIDO_BLOQUEADO VARCHAR(50),VENDA_BLOQUEADO VARCHAR(50),EAN13 VARCHAR(15),ESTOQUE_09 INT,ESTOQUE_11 INT,ESTOQUE_500 INT);";
+
+                    commandinsert1.ExecuteNonQuery();
+                    objConx0.Close();
+                }
+
                 var requisicaoWeb = WebRequest.CreateHttp($"{ConnectProdutos}" + "?$format=json");
                 requisicaoWeb.Method = "GET";
                 requisicaoWeb.Headers.Add("Authorization", $"{Authorization}");
@@ -63,7 +89,7 @@ namespace DashZonaCriativa
                         {
                             MySqlConnection objConx = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
                             objConx.Open();
-
+                            
                             while (i < 1)
                             {
                                 if (i == 1)
@@ -88,6 +114,35 @@ namespace DashZonaCriativa
                         {
                             Console.WriteLine(e.Message);
                             Console.WriteLine($"ID Produto :  {prof.CodProduto} - {prof.Descricao1}");
+
+                            //Verificando a pasta de Log. 
+                            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                            string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                            //Verifica se o arquivo de Log não existe e inclui as informações.
+                            if (!File.Exists(path))
+                            {
+                                DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                foreach (FileInfo fi in dir.GetFiles())
+                                {
+                                    fi.Delete();
+                                }
+
+                                string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Produto :  {prof.CodProduto} - {prof.Descricao1} - {e.Message}");
+                                writer1.Close();
+
+                            }
+                            //Verifica se o arquivo de Log já existe e inclui as informações.
+                            else
+                            {
+                                using (StreamWriter sw = File.AppendText(path))
+                                {
+                                    sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Produto :  {prof.CodProduto} - {prof.Descricao1} - {e.Message}");
+                                }
+                            }
                         }
                     }
 
@@ -143,6 +198,36 @@ namespace DashZonaCriativa
                                 {
                                     Console.WriteLine(ex.Message);
                                     Console.WriteLine($"ID Preco :  {pre.CodProduto} - {pre.Descricao1}");
+
+                                    //Verificando a pasta de Log. 
+                                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                    string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                    //Verifica se o arquivo de Log não existe e inclui as informações.
+                                    if (!File.Exists(path))
+                                    {
+                                        DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                        foreach (FileInfo fi in dir.GetFiles())
+                                        {
+                                            fi.Delete();
+                                        }
+
+                                        string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                        StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                        writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Preco :  {pre.CodProduto} - {pre.Descricao1} - {ex.Message}");
+                                        writer1.Close();
+
+                                    }
+                                    //Verifica se o arquivo de Log já existe e inclui as informações.
+                                    else
+                                    {
+                                        using (StreamWriter sw = File.AppendText(path))
+                                        {
+                                            sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Preco :  {pre.CodProduto} - {pre.Descricao1} - {ex.Message}");
+                                        }
+                                    }
+
                                 }
                             }
 
@@ -199,6 +284,35 @@ namespace DashZonaCriativa
                                         {
                                             Console.WriteLine(ep.Message);
                                             Console.WriteLine($"ID Filial :  {fili.CodFilial} - {fili.Nome} - {fili.Cnpj}");
+
+                                            //Verificando a pasta de Log. 
+                                            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                            string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                            //Verifica se o arquivo de Log não existe e inclui as informações.
+                                            if (!File.Exists(path))
+                                            {
+                                                DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                foreach (FileInfo fi in dir.GetFiles())
+                                                {
+                                                    fi.Delete();
+                                                }
+
+                                                string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Filial :  {fili.CodFilial} - {fili.Nome} - {fili.Cnpj} - {ep.Message}");
+                                                writer1.Close();
+
+                                            }
+                                            //Verifica se o arquivo de Log já existe e inclui as informações.
+                                            else
+                                            {
+                                                using (StreamWriter sw = File.AppendText(path))
+                                                {
+                                                    sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Filial :  {fili.CodFilial} - {fili.Nome} - {fili.Cnpj} - {ep.Message}");
+                                                }
+                                            }
                                         }
                                     }
 
@@ -256,6 +370,35 @@ namespace DashZonaCriativa
                                                 {
                                                     Console.WriteLine(ep.Message);
                                                     Console.WriteLine($"ID Cliente :  {Cl.CodCliente} - {Cl.Nome} - {Cl.Cnpj}");
+
+                                                    //Verificando a pasta de Log. 
+                                                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                    string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                    //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                    if (!File.Exists(path))
+                                                    {
+                                                        DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                        foreach (FileInfo fi in dir.GetFiles())
+                                                        {
+                                                            fi.Delete();
+                                                        }
+
+                                                        string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                        StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                        writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Cliente :  {Cl.CodCliente} - {Cl.Nome} - {Cl.Cnpj} - {ep.Message}");
+                                                        writer1.Close();
+
+                                                    }
+                                                    //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                    else
+                                                    {
+                                                        using (StreamWriter sw = File.AppendText(path))
+                                                        {
+                                                            sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Cliente :  {Cl.CodCliente} - {Cl.Nome} - {Cl.Cnpj} - {ep.Message}");
+                                                        }
+                                                    }
                                                 }
                                             }
 
@@ -313,6 +456,35 @@ namespace DashZonaCriativa
                                                         {
                                                             Console.WriteLine(ep.Message);
                                                             Console.WriteLine($"ID Representante :  {Rp.CodRepresentante} - {Rp.Nome} - {Rp.Cnpj}");
+
+                                                            //Verificando a pasta de Log. 
+                                                            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                            string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                            //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                            if (!File.Exists(path))
+                                                            {
+                                                                DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                                foreach (FileInfo fi in dir.GetFiles())
+                                                                {
+                                                                    fi.Delete();
+                                                                }
+
+                                                                string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                                StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                                writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Representante :  {Rp.CodRepresentante} - {Rp.Nome} - {Rp.Cnpj} - {ep.Message}");
+                                                                writer1.Close();
+
+                                                            }
+                                                            //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                            else
+                                                            {
+                                                                using (StreamWriter sw = File.AppendText(path))
+                                                                {
+                                                                    sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Representante :  {Rp.CodRepresentante} - {Rp.Nome} - {Rp.Cnpj} - {ep.Message}");
+                                                                }
+                                                            }
                                                         }
                                                     }
 
@@ -370,8 +542,36 @@ namespace DashZonaCriativa
                                                                 {
                                                                     Console.WriteLine(ep.Message);
                                                                     Console.WriteLine($"ID Saida :  {sd.CodOperacao} - Romaneio: {sd.Romaneio} - Cliente: {sd.Cliente}");
-                                                                }
 
+                                                                    //Verificando a pasta de Log. 
+                                                                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                                    string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                                    //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                                    if (!File.Exists(path))
+                                                                    {
+                                                                        DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                                        foreach (FileInfo fi in dir.GetFiles())
+                                                                        {
+                                                                            fi.Delete();
+                                                                        }
+
+                                                                        string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                                        StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                                        writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Saida :  {sd.CodOperacao} - Romaneio: {sd.Romaneio} - Cliente: {sd.Cliente} - {ep.Message}");
+                                                                        writer1.Close();
+
+                                                                    }
+                                                                    //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                                    else
+                                                                    {
+                                                                        using (StreamWriter sw = File.AppendText(path))
+                                                                        {
+                                                                            sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Saida :  {sd.CodOperacao} - Romaneio: {sd.Romaneio} - Cliente: {sd.Cliente} - {ep.Message}");
+                                                                        }
+                                                                    }
+                                                                }
                                                             }
 
                                                             //Buscar Movimentações de Entradas e Incluir no Banco de dados MySQL.
@@ -428,6 +628,35 @@ namespace DashZonaCriativa
                                                                         {
                                                                             Console.WriteLine(ent.Message);
                                                                             Console.WriteLine($"ID Entrada :  {ed.CodOperacao} - Romaneio: {ed.Romaneio} - Cliente: {ed.Cliente}");
+
+                                                                            //Verificando a pasta de Log. 
+                                                                            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                                            string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                                            //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                                            if (!File.Exists(path))
+                                                                            {
+                                                                                DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                                                foreach (FileInfo fi in dir.GetFiles())
+                                                                                {
+                                                                                    fi.Delete();
+                                                                                }
+
+                                                                                string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                                                StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                                                writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Entrada :  {ed.CodOperacao} - Romaneio: {ed.Romaneio} - Cliente: {ed.Cliente} - {ent.Message}");
+                                                                                writer1.Close();
+
+                                                                            }
+                                                                            //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                                            else
+                                                                            {
+                                                                                using (StreamWriter sw = File.AppendText(path))
+                                                                                {
+                                                                                    sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Entrada :  {ed.CodOperacao} - Romaneio: {ed.Romaneio} - Cliente: {ed.Cliente} - { ent.Message}");
+                                                                                }
+                                                                            }
                                                                         }
                                                                     }
                                                                     //Buscar os Produtos Eventos (Saidas / Entradas) e Incluir no Banco de dados MySQL.
@@ -483,6 +712,36 @@ namespace DashZonaCriativa
                                                                                 {
                                                                                     Console.WriteLine(etv.Message);
                                                                                     Console.WriteLine($"ID Produtos Eventos :  {ppo.CodOperacao} - Produto: {ppo.Produto}");
+
+                                                                                    //Verificando a pasta de Log. 
+                                                                                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                                                    string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                                                    //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                                                    if (!File.Exists(path))
+                                                                                    {
+                                                                                        DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                                                        foreach (FileInfo fi in dir.GetFiles())
+                                                                                        {
+                                                                                            fi.Delete();
+                                                                                        }
+
+                                                                                        string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                                                        StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                                                        writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Produtos Eventos :  {ppo.CodOperacao} - Produto: {ppo.Produto} - {etv.Message}");
+                                                                                        writer1.Close();
+
+                                                                                    }
+                                                                                    //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                                                    else
+                                                                                    {
+                                                                                        using (StreamWriter sw = File.AppendText(path))
+                                                                                        {
+                                                                                            sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Produtos Eventos :  {ppo.CodOperacao} - Produto: {ppo.Produto} - {etv.Message}");
+                                                                                        }
+                                                                                    }
+
                                                                                 }
                                                                             }
                                                                         }
@@ -490,6 +749,35 @@ namespace DashZonaCriativa
                                                                     catch (WebException epp)
                                                                     {
                                                                         Console.WriteLine(epp.Message);
+
+                                                                        //Verificando a pasta de Log. 
+                                                                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                                        string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                                        //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                                        if (!File.Exists(path))
+                                                                        {
+                                                                            DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                                            foreach (FileInfo fi in dir.GetFiles())
+                                                                            {
+                                                                                fi.Delete();
+                                                                            }
+
+                                                                            string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                                            StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                                            writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{epp.Message}");
+                                                                            writer1.Close();
+
+                                                                        }
+                                                                        //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                                        else
+                                                                        {
+                                                                            using (StreamWriter sw = File.AppendText(path))
+                                                                            {
+                                                                                sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{epp.Message}");
+                                                                            }
+                                                                        }
                                                                     }
                                                                 }
 
@@ -497,18 +785,108 @@ namespace DashZonaCriativa
                                                             catch (WebException ee)
                                                             {
                                                                 Console.WriteLine(ee.Message);
+
+                                                                //Verificando a pasta de Log. 
+                                                                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                                string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                                //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                                if (!File.Exists(path))
+                                                                {
+                                                                    DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                                    foreach (FileInfo fi in dir.GetFiles())
+                                                                    {
+                                                                        fi.Delete();
+                                                                    }
+
+                                                                    string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                                    StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                                    writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{ee.Message}");
+                                                                    writer1.Close();
+
+                                                                }
+                                                                //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                                else
+                                                                {
+                                                                    using (StreamWriter sw = File.AppendText(path))
+                                                                    {
+                                                                        sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{ee.Message}");
+                                                                    }
+                                                                }
+
                                                             }
                                                         }
                                                     }
                                                     catch (WebException es)
                                                     {
                                                         Console.WriteLine(es.Message);
+
+                                                        //Verificando a pasta de Log. 
+                                                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                        string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                        //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                        if (!File.Exists(path))
+                                                        {
+                                                            DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                            foreach (FileInfo fi in dir.GetFiles())
+                                                            {
+                                                                fi.Delete();
+                                                            }
+
+                                                            string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                            StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                            writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{es.Message}");
+                                                            writer1.Close();
+
+                                                        }
+                                                        //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                        else
+                                                        {
+                                                            using (StreamWriter sw = File.AppendText(path))
+                                                            {
+                                                                sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{es.Message}");
+                                                            }
+                                                        }
+
                                                     }
                                                 }
                                             }
                                             catch (WebException er)
                                             {
                                                 Console.WriteLine(er.Message);
+
+                                                //Verificando a pasta de Log. 
+                                                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                if (!File.Exists(path))
+                                                {
+                                                    DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                    foreach (FileInfo fi in dir.GetFiles())
+                                                    {
+                                                        fi.Delete();
+                                                    }
+
+                                                    string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                    StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                    writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{er.Message}");
+                                                    writer1.Close();
+
+                                                }
+                                                //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                else
+                                                {
+                                                    using (StreamWriter sw = File.AppendText(path))
+                                                    {
+                                                        sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{er.Message}");
+                                                    }
+                                                }
+
                                             }
 
                                         }
@@ -516,12 +894,72 @@ namespace DashZonaCriativa
                                     catch (WebException ec)
                                     {
                                         Console.WriteLine(ec.Message);
+
+                                        //Verificando a pasta de Log. 
+                                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                        string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                        //Verifica se o arquivo de Log não existe e inclui as informações.
+                                        if (!File.Exists(path))
+                                        {
+                                            DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                            foreach (FileInfo fi in dir.GetFiles())
+                                            {
+                                                fi.Delete();
+                                            }
+
+                                            string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                            StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                            writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{ec.Message}");
+                                            writer1.Close();
+
+                                        }
+                                        //Verifica se o arquivo de Log já existe e inclui as informações.
+                                        else
+                                        {
+                                            using (StreamWriter sw = File.AppendText(path))
+                                            {
+                                                sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{ec.Message}");
+                                            }
+                                        }
+
                                     }
                                 }
                             }
                             catch (WebException e)
                             {
                                 Console.WriteLine(e.Message);
+
+                                //Verificando a pasta de Log. 
+                                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                //Verifica se o arquivo de Log não existe e inclui as informações.
+                                if (!File.Exists(path))
+                                {
+                                    DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                    foreach (FileInfo fi in dir.GetFiles())
+                                    {
+                                        fi.Delete();
+                                    }
+
+                                    string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                    StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                    writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{e.Message}");
+                                    writer1.Close();
+
+                                }
+                                //Verifica se o arquivo de Log já existe e inclui as informações.
+                                else
+                                {
+                                    using (StreamWriter sw = File.AppendText(path))
+                                    {
+                                        sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{e.Message}");
+                                    }
+                                }
+
                             }
 
                         }
@@ -530,6 +968,36 @@ namespace DashZonaCriativa
                     catch (WebException eb)
                     {
                         Console.WriteLine(eb.Message);
+
+                        //Verificando a pasta de Log. 
+                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                        string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                        //Verifica se o arquivo de Log não existe e inclui as informações.
+                        if (!File.Exists(path))
+                        {
+                            DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                            foreach (FileInfo fi in dir.GetFiles())
+                            {
+                                fi.Delete();
+                            }
+
+                            string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                            StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                            writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{eb.Message}");
+                            writer1.Close();
+
+                        }
+                        //Verifica se o arquivo de Log já existe e inclui as informações.
+                        else
+                        {
+                            using (StreamWriter sw = File.AppendText(path))
+                            {
+                                sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{eb.Message}");
+                            }
+                        }
+
                     }
                     Console.WriteLine("Concluído...");
                 }
@@ -538,6 +1006,36 @@ namespace DashZonaCriativa
             catch (WebException ef)
             {
                 Console.WriteLine(ef.Message);
+
+                //Verificando a pasta de Log. 
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                //Verifica se o arquivo de Log não existe e inclui as informações.
+                if (!File.Exists(path))
+                {
+                    DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                    foreach (FileInfo fi in dir.GetFiles())
+                    {
+                        fi.Delete();
+                    }
+
+                    string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                    StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                    writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{ef.Message}");
+                    writer1.Close();
+
+                }
+                //Verifica se o arquivo de Log já existe e inclui as informações.
+                else
+                {
+                    using (StreamWriter sw = File.AppendText(path))
+                    {
+                        sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{ef.Message}");
+                    }
+                }
+
             }
         }
     }
