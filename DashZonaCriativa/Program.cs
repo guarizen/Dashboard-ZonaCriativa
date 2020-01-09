@@ -2,6 +2,7 @@
 using ListaEntradasAPI;
 using ListaFiliaisAPI;
 using ListaPrecosAPI;
+using ListaPrefaturamentosAPI;
 using ListaProdutosAPI;
 using ListaProdutosEventosAPI;
 using ListaRepresentantesAPI;
@@ -40,6 +41,7 @@ namespace DashZonaCriativa
             var ConnectMovSaidas = ConfigurationManager.AppSettings["ConnectMovSaidas"];
             var ConnectMovEntradas = ConfigurationManager.AppSettings["ConnectMovEntradas"];
             var ConnectProdutosEventos = ConfigurationManager.AppSettings["ConnectProdutosEventos"];
+            var ConnectPrefaturamentos = ConfigurationManager.AppSettings["ConnectPrefaturamentos"];
             var Authorization = ConfigurationManager.AppSettings["Authorization"];
 
             //Buscar Produtos e Incluir no Banco de dados MySQL.
@@ -55,6 +57,7 @@ namespace DashZonaCriativa
 
                 if (fault == "Faulted")
                 {
+                    Console.WriteLine("Criando Tabela de Produtos...");
                     var commandinsert1 = objConx0.CreateCommand();
                     commandinsert1.CommandText = "CREATE TABLE PRODUTOS (PRODUTO INT NOT NULL,COD_PRODUTO VARCHAR(30),DESCRICAO1 VARCHAR(255),REFERENCIA VARCHAR(255),ESTAMPA VARCHAR(255),COR VARCHAR(255),TAMANHO VARCHAR(5),COD_NCM VARCHAR(15),DEPARTAMENTOS VARCHAR(255),"
                                                  + "DIVISAO VARCHAR(255),GRUPO VARCHAR(255),TIPO VARCHAR(255),COLECAO VARCHAR(255),SUBCOLECAO VARCHAR(255),MARCA VARCHAR(255),CATEGORIA VARCHAR(255),STATUS VARCHAR(255),QMM INT,ALTURA VARCHAR(10),LARGURA VARCHAR(10),"
@@ -63,6 +66,7 @@ namespace DashZonaCriativa
                     commandinsert1.ExecuteNonQuery();
                     objConx0.Close();
                 }
+                objConx0.Close();
 
                 var requisicaoWeb = WebRequest.CreateHttp($"{ConnectProdutos}" + "?$format=json");
                 requisicaoWeb.Method = "GET";
@@ -89,7 +93,7 @@ namespace DashZonaCriativa
                         {
                             MySqlConnection objConx = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
                             objConx.Open();
-                            
+
                             while (i < 1)
                             {
                                 if (i == 1)
@@ -112,8 +116,7 @@ namespace DashZonaCriativa
                         }
                         catch (MySqlException e)
                         {
-                            Console.WriteLine(e.Message);
-                            Console.WriteLine($"ID Produto :  {prof.CodProduto} - {prof.Descricao1}");
+                            Console.WriteLine($"ID Produto :  {prof.CodProduto} - {prof.Descricao1} - Erro: {e.Message}");
 
                             //Verificando a pasta de Log. 
                             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -131,7 +134,7 @@ namespace DashZonaCriativa
 
                                 string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
                                 StreamWriter writer1 = new StreamWriter(nomeArquivo1);
-                                writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Produto :  {prof.CodProduto} - {prof.Descricao1} - {e.Message}");
+                                writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Produto :  {prof.CodProduto} - {prof.Descricao1} - Erro: {e.Message}");
                                 writer1.Close();
 
                             }
@@ -140,7 +143,7 @@ namespace DashZonaCriativa
                             {
                                 using (StreamWriter sw = File.AppendText(path))
                                 {
-                                    sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Produto :  {prof.CodProduto} - {prof.Descricao1} - {e.Message}");
+                                    sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Produto :  {prof.CodProduto} - {prof.Descricao1} - Erro: {e.Message}");
                                 }
                             }
                         }
@@ -149,6 +152,26 @@ namespace DashZonaCriativa
                     //Buscar Precos e Incluir no Banco de dados MySQL.
                     try
                     {
+                        MySqlConnection objConx01 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                        objConx01.Open();
+
+                        var command01 = objConx01.CreateCommand();
+                        command01.CommandText = "SELECT COUNT(*) AS N FROM PRECOS";
+                        var retCommnad1 = command01.ExecuteReaderAsync();
+                        string fault1 = retCommnad1.Status.ToString();
+
+                        if (fault1 == "Faulted")
+                        {
+                            Console.WriteLine("Criando Tabela de Precos...");
+                            var CommandInsert2 = objConx01.CreateCommand();
+                            CommandInsert2.CommandText = "CREATE TABLE PRECOS (PRODUTO INT NOT NULL,COD_PRODUTO VARCHAR(30),DESCRICAO1 VARCHAR(255),ESTAMPA VARCHAR(255),COR VARCHAR(255),"
+                                                        + "TAMANHO VARCHAR(5),PRECO_214 DECIMAL(14,2),PRECO_187 DECIMAL(14,2),PRECO_224 DECIMAL(14,2),PRECO_204 DECIMAL(14,2),PRECO_205 DECIMAL(14,2));";
+
+                            CommandInsert2.ExecuteNonQuery();
+                            objConx01.Close();
+                        }
+                        objConx01.Close();
+
                         var requisicaoWeb1 = WebRequest.CreateHttp($"{ConnectPrecos}" + "?$format=json");
                         requisicaoWeb1.Method = "GET";
                         requisicaoWeb1.Headers.Add("Authorization", $"{Authorization}");
@@ -186,8 +209,8 @@ namespace DashZonaCriativa
                                     }
 
                                     var command1 = objConx1.CreateCommand();
-                                    command1.CommandText = "INSERT INTO PRECOS (PRODUTO,COD_PRODUTO,DESCRICAO1,COD_EST,ESTAMPA,COD_COR,COR,TAMANHO,PRECO_214,PRECO_187,PRECO_224,PRECO_204,PRECO_205)" +
-                                                                $"VALUES({pre.Produto}," + $"\"{pre.CodProduto}\", " + $"\"{pre.Descricao1}\", " + $"\"{pre.CodEst}\", " + $"\"{pre.Estampa}\", " + $"\"{pre.CodCor}\", " + $"\"{pre.Cor}\", " + $"\"{pre.Tamanho}\", "
+                                    command1.CommandText = "INSERT INTO PRECOS (PRODUTO,COD_PRODUTO,DESCRICAO1,ESTAMPA,COR,TAMANHO,PRECO_214,PRECO_187,PRECO_224,PRECO_204,PRECO_205)" +
+                                                                $"VALUES({pre.Produto}," + $"\"{pre.CodProduto}\", " + $"\"{pre.Descricao1}\", " + $"\"{pre.Estampa}\", " + $"\"{pre.Cor}\", " + $"\"{pre.Tamanho}\", "
                                                                          + $"{pre.Preco214}" + "," + $"{pre.Preco187}" + "," + $"{pre.Preco224}" + "," + $"{pre.Preco204}" + "," + $"{pre.Preco205}" + ")";
 
                                     command1.ExecuteNonQuery();
@@ -196,8 +219,7 @@ namespace DashZonaCriativa
                                 }
                                 catch (MySqlException ex)
                                 {
-                                    Console.WriteLine(ex.Message);
-                                    Console.WriteLine($"ID Preco :  {pre.CodProduto} - {pre.Descricao1}");
+                                    Console.WriteLine($"ID Preco :  {pre.CodProduto} - {pre.Descricao1} - Erro: {ex.Message}");
 
                                     //Verificando a pasta de Log. 
                                     Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -215,7 +237,7 @@ namespace DashZonaCriativa
 
                                         string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
                                         StreamWriter writer1 = new StreamWriter(nomeArquivo1);
-                                        writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Preco :  {pre.CodProduto} - {pre.Descricao1} - {ex.Message}");
+                                        writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Preco :  {pre.CodProduto} - {pre.Descricao1} - Erro: {ex.Message}");
                                         writer1.Close();
 
                                     }
@@ -224,7 +246,7 @@ namespace DashZonaCriativa
                                     {
                                         using (StreamWriter sw = File.AppendText(path))
                                         {
-                                            sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Preco :  {pre.CodProduto} - {pre.Descricao1} - {ex.Message}");
+                                            sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Preco :  {pre.CodProduto} - {pre.Descricao1} - Erro: {ex.Message}");
                                         }
                                     }
 
@@ -234,6 +256,25 @@ namespace DashZonaCriativa
                             //Buscar Filiais e Incluir no Banco de dados MySQL.
                             try
                             {
+                                MySqlConnection objConx02 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                                objConx02.Open();
+
+                                var command02 = objConx02.CreateCommand();
+                                command02.CommandText = "SELECT COUNT(*) AS N FROM FILIAIS";
+                                var retCommnad2 = command02.ExecuteReaderAsync();
+                                string fault2 = retCommnad2.Status.ToString();
+
+                                if (fault2 == "Faulted")
+                                {
+                                    Console.WriteLine("Criando Tabela de Filiais...");
+                                    var CommandInsert3 = objConx02.CreateCommand();
+                                    CommandInsert3.CommandText = "CREATE TABLE FILIAIS (FILIAL INT NOT NULL,COD_FILIAL VARCHAR(30),NOME VARCHAR(255),FANTASIA VARCHAR(255),CGC VARCHAR(30),CNPJ VARCHAR(30),IE VARCHAR(30),CONTA INT,"
+                                                               + "TIPO_EMPRESA VARCHAR(60),E_MAIL VARCHAR(255),ENDERECO VARCHAR(255),BAIRRO VARCHAR(255),CIDADE VARCHAR(255),ESTADO VARCHAR(2),CEP VARCHAR(12));";
+                                    CommandInsert3.ExecuteNonQuery();
+                                    objConx02.Close();
+                                }
+                                objConx02.Close();
+
                                 var requisicaoWeb2 = WebRequest.CreateHttp($"{ConnectFiliais}" + "?$format=json");
                                 requisicaoWeb2.Method = "GET";
                                 requisicaoWeb2.Headers.Add("Authorization", $"{Authorization}");
@@ -282,8 +323,7 @@ namespace DashZonaCriativa
                                         }
                                         catch (MySqlException ep)
                                         {
-                                            Console.WriteLine(ep.Message);
-                                            Console.WriteLine($"ID Filial :  {fili.CodFilial} - {fili.Nome} - {fili.Cnpj}");
+                                            Console.WriteLine($"ID Filial :  {fili.CodFilial} - {fili.Nome} - {fili.Cnpj} - Erro: {ep.Message}");
 
                                             //Verificando a pasta de Log. 
                                             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -301,7 +341,7 @@ namespace DashZonaCriativa
 
                                                 string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
                                                 StreamWriter writer1 = new StreamWriter(nomeArquivo1);
-                                                writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Filial :  {fili.CodFilial} - {fili.Nome} - {fili.Cnpj} - {ep.Message}");
+                                                writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Filial :  {fili.CodFilial} - {fili.Nome} - {fili.Cnpj} - Erro: {ep.Message}");
                                                 writer1.Close();
 
                                             }
@@ -310,7 +350,7 @@ namespace DashZonaCriativa
                                             {
                                                 using (StreamWriter sw = File.AppendText(path))
                                                 {
-                                                    sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Filial :  {fili.CodFilial} - {fili.Nome} - {fili.Cnpj} - {ep.Message}");
+                                                    sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Filial :  {fili.CodFilial} - {fili.Nome} - {fili.Cnpj} - Erro: {ep.Message}");
                                                 }
                                             }
                                         }
@@ -319,6 +359,26 @@ namespace DashZonaCriativa
                                     //Buscar Clientes e Incluir no Banco de dados MySQL.
                                     try
                                     {
+                                        MySqlConnection objConx03 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                                        objConx03.Open();
+
+                                        var command03 = objConx03.CreateCommand();
+                                        command03.CommandText = "SELECT COUNT(*) AS N FROM CLIENTES";
+                                        var retCommnad3 = command03.ExecuteReaderAsync();
+                                        string fault3 = retCommnad3.Status.ToString();
+
+                                        if (fault3 == "Faulted")
+                                        {
+                                            Console.WriteLine("Criando Tabela de Clientes...");
+                                            var CommandInsert3 = objConx03.CreateCommand();
+                                            CommandInsert3.CommandText = "CREATE TABLE CLIENTES (CLIENTE INT NOT NULL,COD_CLIENTE VARCHAR(30),NOME VARCHAR(255),FANTASIA VARCHAR(255),CGC VARCHAR(30),CNPJ VARCHAR(30),IE VARCHAR(30),PF_PJ VARCHAR(5),TIPO_EMPRESA VARCHAR(60),"
+                                                                        + "E_MAIL VARCHAR(255),E_MAIL_NFE VARCHAR(255),GRUPO_LOJA VARCHAR(255),REPRESENTANTE INT,COD_ENDERECO INT,ENDERECO VARCHAR(255),BAIRRO VARCHAR(255),CIDADE VARCHAR(255),ESTADO VARCHAR(2),CEP VARCHAR(12),"
+                                                                        + "PAIS VARCHAR(255));";
+                                            CommandInsert3.ExecuteNonQuery();
+                                            objConx03.Close();
+                                        }
+                                        objConx03.Close();
+
                                         var requisicaoWeb3 = WebRequest.CreateHttp($"{ConnectClientes}" + "?$format=json");
                                         requisicaoWeb3.Method = "GET";
                                         requisicaoWeb3.Headers.Add("Authorization", $"{Authorization}");
@@ -368,8 +428,7 @@ namespace DashZonaCriativa
                                                 }
                                                 catch (MySqlException ep)
                                                 {
-                                                    Console.WriteLine(ep.Message);
-                                                    Console.WriteLine($"ID Cliente :  {Cl.CodCliente} - {Cl.Nome} - {Cl.Cnpj}");
+                                                    Console.WriteLine($"ID Cliente :  {Cl.CodCliente} - {Cl.Nome} - {Cl.Cnpj} - Erro: {ep.Message}");
 
                                                     //Verificando a pasta de Log. 
                                                     Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -387,7 +446,7 @@ namespace DashZonaCriativa
 
                                                         string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
                                                         StreamWriter writer1 = new StreamWriter(nomeArquivo1);
-                                                        writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Cliente :  {Cl.CodCliente} - {Cl.Nome} - {Cl.Cnpj} - {ep.Message}");
+                                                        writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Cliente :  {Cl.CodCliente} - {Cl.Nome} - {Cl.Cnpj} - Erro: {ep.Message}");
                                                         writer1.Close();
 
                                                     }
@@ -396,7 +455,7 @@ namespace DashZonaCriativa
                                                     {
                                                         using (StreamWriter sw = File.AppendText(path))
                                                         {
-                                                            sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Cliente :  {Cl.CodCliente} - {Cl.Nome} - {Cl.Cnpj} - {ep.Message}");
+                                                            sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Cliente :  {Cl.CodCliente} - {Cl.Nome} - {Cl.Cnpj} - Erro: {ep.Message}");
                                                         }
                                                     }
                                                 }
@@ -405,6 +464,25 @@ namespace DashZonaCriativa
                                             //Buscar Representantes e Incluir no Banco de dados MySQL.
                                             try
                                             {
+                                                MySqlConnection objConx04 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                                                objConx04.Open();
+
+                                                var command04 = objConx04.CreateCommand();
+                                                command04.CommandText = "SELECT COUNT(*) AS N FROM REPRESENTANTES";
+                                                var retCommnad4 = command04.ExecuteReaderAsync();
+                                                string fault4 = retCommnad4.Status.ToString();
+
+                                                if (fault4 == "Faulted")
+                                                {
+                                                    Console.WriteLine("Criando Tabela de Representantes...");
+                                                    var CommandInsert4 = objConx04.CreateCommand();
+                                                    CommandInsert4.CommandText = "CREATE TABLE REPRESENTANTES (REPRESENTANTE INT NOT NULL,COD_REPRESENTANTE VARCHAR(30),NOME VARCHAR(255),FANTASIA VARCHAR(255),CGC VARCHAR(30),CNPJ VARCHAR(30),IE VARCHAR(30),"
+                                                                                + "PF_PJ VARCHAR(5),E_MAIL VARCHAR(255),COD_ENDERECO INT,ENDERECO VARCHAR(255),BAIRRO VARCHAR(255),CIDADE VARCHAR(255),ESTADO VARCHAR(2),CEP VARCHAR(12),PAIS VARCHAR(255));";
+                                                    CommandInsert4.ExecuteNonQuery();
+                                                    objConx04.Close();
+                                                }
+                                                objConx04.Close();
+
                                                 var requisicaoWeb4 = WebRequest.CreateHttp($"{ConnectRepresentantes}" + "?$format=json");
                                                 requisicaoWeb4.Method = "GET";
                                                 requisicaoWeb4.Headers.Add("Authorization", $"{Authorization}");
@@ -454,8 +532,7 @@ namespace DashZonaCriativa
                                                         }
                                                         catch (MySqlException ep)
                                                         {
-                                                            Console.WriteLine(ep.Message);
-                                                            Console.WriteLine($"ID Representante :  {Rp.CodRepresentante} - {Rp.Nome} - {Rp.Cnpj}");
+                                                            Console.WriteLine($"ID Representante :  {Rp.CodRepresentante} - {Rp.Nome} - {Rp.Cnpj} - Erro: {ep.Message}");
 
                                                             //Verificando a pasta de Log. 
                                                             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -473,7 +550,7 @@ namespace DashZonaCriativa
 
                                                                 string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
                                                                 StreamWriter writer1 = new StreamWriter(nomeArquivo1);
-                                                                writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Representante :  {Rp.CodRepresentante} - {Rp.Nome} - {Rp.Cnpj} - {ep.Message}");
+                                                                writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Representante :  {Rp.CodRepresentante} - {Rp.Nome} - {Rp.Cnpj} - Erro: {ep.Message}");
                                                                 writer1.Close();
 
                                                             }
@@ -482,7 +559,7 @@ namespace DashZonaCriativa
                                                             {
                                                                 using (StreamWriter sw = File.AppendText(path))
                                                                 {
-                                                                    sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Representante :  {Rp.CodRepresentante} - {Rp.Nome} - {Rp.Cnpj} - {ep.Message}");
+                                                                    sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Representante :  {Rp.CodRepresentante} - {Rp.Nome} - {Rp.Cnpj} - Erro: {ep.Message}");
                                                                 }
                                                             }
                                                         }
@@ -491,6 +568,26 @@ namespace DashZonaCriativa
                                                     //Buscar Movimentações de Saidas e Incluir no Banco de dados MySQL.
                                                     try
                                                     {
+                                                        MySqlConnection objConx05 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                                                        objConx05.Open();
+
+                                                        var command05 = objConx05.CreateCommand();
+                                                        command05.CommandText = "SELECT COUNT(*) AS N FROM SAIDAS";
+                                                        var retCommnad5 = command05.ExecuteReaderAsync();
+                                                        string fault5 = retCommnad5.Status.ToString();
+
+                                                        if (fault5 == "Faulted")
+                                                        {
+                                                            Console.WriteLine("Criando Tabela de Movimentacoes de Saidas...");
+                                                            var CommandInsert5 = objConx05.CreateCommand();
+                                                            CommandInsert5.CommandText = "CREATE TABLE SAIDAS (COD_OPERACAO INT NOT NULL,TIPO_OPERACAO VARCHAR(5),EVENTO INT,ROMANEIO VARCHAR(60),DATA VARCHAR(25),CLIENTE INT,COD_ENDERECO INT,CONDICOES_PGTO VARCHAR(255),"
+                                                                                        + "FILIAL INT,CONTA INT,REPRESENTANTE INT,TRANSPORTADORA VARCHAR(255),PESO_B VARCHAR(25),PESO_L VARCHAR(25),QTDE INT,TOTAL DECIMAL(14, 2),V_FRETE DECIMAL(14,2),VALOR_JUROS DECIMAL(14,2),"
+                                                                                        + "VALOR_FINAL DECIMAL(14,2),ESPECIE_VOLUME VARCHAR(255),VOLUME VARCHAR(25));";
+                                                            CommandInsert5.ExecuteNonQuery();
+                                                            objConx05.Close();
+                                                        }
+                                                        objConx05.Close();
+
                                                         var requisicaoWeb5 = WebRequest.CreateHttp($"{ConnectMovSaidas}" + "?$format=json");
                                                         requisicaoWeb5.Method = "GET";
                                                         requisicaoWeb5.Headers.Add("Authorization", $"{Authorization}");
@@ -540,8 +637,7 @@ namespace DashZonaCriativa
                                                                 }
                                                                 catch (MySqlException ep)
                                                                 {
-                                                                    Console.WriteLine(ep.Message);
-                                                                    Console.WriteLine($"ID Saida :  {sd.CodOperacao} - Romaneio: {sd.Romaneio} - Cliente: {sd.Cliente}");
+                                                                    Console.WriteLine($"ID Saida :  {sd.CodOperacao} - Romaneio: {sd.Romaneio} - Cliente: {sd.Cliente} - Erro: {ep.Message}");
 
                                                                     //Verificando a pasta de Log. 
                                                                     Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -559,7 +655,7 @@ namespace DashZonaCriativa
 
                                                                         string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
                                                                         StreamWriter writer1 = new StreamWriter(nomeArquivo1);
-                                                                        writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Saida :  {sd.CodOperacao} - Romaneio: {sd.Romaneio} - Cliente: {sd.Cliente} - {ep.Message}");
+                                                                        writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Saida :  {sd.CodOperacao} - Romaneio: {sd.Romaneio} - Cliente: {sd.Cliente} - Erro: {ep.Message}");
                                                                         writer1.Close();
 
                                                                     }
@@ -568,7 +664,7 @@ namespace DashZonaCriativa
                                                                     {
                                                                         using (StreamWriter sw = File.AppendText(path))
                                                                         {
-                                                                            sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Saida :  {sd.CodOperacao} - Romaneio: {sd.Romaneio} - Cliente: {sd.Cliente} - {ep.Message}");
+                                                                            sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Saida :  {sd.CodOperacao} - Romaneio: {sd.Romaneio} - Cliente: {sd.Cliente} - Erro: {ep.Message}");
                                                                         }
                                                                     }
                                                                 }
@@ -577,6 +673,26 @@ namespace DashZonaCriativa
                                                             //Buscar Movimentações de Entradas e Incluir no Banco de dados MySQL.
                                                             try
                                                             {
+                                                                MySqlConnection objConx06 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                                                                objConx06.Open();
+
+                                                                var command06 = objConx06.CreateCommand();
+                                                                command06.CommandText = "SELECT COUNT(*) AS N FROM SAIDAS";
+                                                                var retCommnad6 = command06.ExecuteReaderAsync();
+                                                                string fault6 = retCommnad6.Status.ToString();
+
+                                                                if (fault6 == "Faulted")
+                                                                {
+                                                                    Console.WriteLine("Criando Tabela de Movimentacoes de Saidas...");
+                                                                    var CommandInsert6 = objConx06.CreateCommand();
+                                                                    CommandInsert6.CommandText = "CREATE TABLE ENTRADAS (COD_OPERACAO INT NOT NULL,TIPO_OPERACAO VARCHAR(5),EVENTO INT,ROMANEIO VARCHAR(60),DATA VARCHAR(25),CLIENTE INT,COD_ENDERECO INT,CONDICOES_PGTO VARCHAR(255),FILIAL INT,"
+                                                                                                + "CONTA INT,REPRESENTANTE INT,TRANSPORTADORA VARCHAR(255),PESO_B VARCHAR(25),PESO_L VARCHAR(25),QTDE INT,TOTAL DECIMAL(14, 2),V_FRETE DECIMAL(14,2),VALOR_JUROS DECIMAL(14,2),VALOR_FINAL DECIMAL(14,2),"
+                                                                                                + "ESPECIE_VOLUME VARCHAR(255),VOLUME VARCHAR(25));";
+                                                                    CommandInsert6.ExecuteNonQuery();
+                                                                    objConx06.Close();
+                                                                }
+                                                                objConx06.Close();
+
                                                                 var requisicaoWeb6 = WebRequest.CreateHttp($"{ConnectMovEntradas}" + "?$format=json");
                                                                 requisicaoWeb6.Method = "GET";
                                                                 requisicaoWeb6.Headers.Add("Authorization", $"{Authorization}");
@@ -626,8 +742,7 @@ namespace DashZonaCriativa
                                                                         }
                                                                         catch (MySqlException ent)
                                                                         {
-                                                                            Console.WriteLine(ent.Message);
-                                                                            Console.WriteLine($"ID Entrada :  {ed.CodOperacao} - Romaneio: {ed.Romaneio} - Cliente: {ed.Cliente}");
+                                                                            Console.WriteLine($"ID Entrada :  {ed.CodOperacao} - Romaneio: {ed.Romaneio} - Cliente: {ed.Cliente} - Erro: {ent.Message}");
 
                                                                             //Verificando a pasta de Log. 
                                                                             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -645,7 +760,7 @@ namespace DashZonaCriativa
 
                                                                                 string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
                                                                                 StreamWriter writer1 = new StreamWriter(nomeArquivo1);
-                                                                                writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Entrada :  {ed.CodOperacao} - Romaneio: {ed.Romaneio} - Cliente: {ed.Cliente} - {ent.Message}");
+                                                                                writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Entrada :  {ed.CodOperacao} - Romaneio: {ed.Romaneio} - Cliente: {ed.Cliente} - Erro: {ent.Message}");
                                                                                 writer1.Close();
 
                                                                             }
@@ -654,7 +769,7 @@ namespace DashZonaCriativa
                                                                             {
                                                                                 using (StreamWriter sw = File.AppendText(path))
                                                                                 {
-                                                                                    sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Entrada :  {ed.CodOperacao} - Romaneio: {ed.Romaneio} - Cliente: {ed.Cliente} - { ent.Message}");
+                                                                                    sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Entrada :  {ed.CodOperacao} - Romaneio: {ed.Romaneio} - Cliente: {ed.Cliente} - Erro: { ent.Message}");
                                                                                 }
                                                                             }
                                                                         }
@@ -662,6 +777,25 @@ namespace DashZonaCriativa
                                                                     //Buscar os Produtos Eventos (Saidas / Entradas) e Incluir no Banco de dados MySQL.
                                                                     try
                                                                     {
+                                                                        MySqlConnection objConx07 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                                                                        objConx07.Open();
+
+                                                                        var command07 = objConx07.CreateCommand();
+                                                                        command07.CommandText = "SELECT COUNT(*) AS N FROM PRODUTOS_EVENTOS";
+                                                                        var retCommnad7 = command07.ExecuteReaderAsync();
+                                                                        string fault7 = retCommnad7.Status.ToString();
+
+                                                                        if (fault7 == "Faulted")
+                                                                        {
+                                                                            Console.WriteLine("Criando Tabela de Produtos Eventos...");
+                                                                            var CommandInsert7 = objConx07.CreateCommand();
+                                                                            CommandInsert7.CommandText = "CREATE TABLE PRODUTOS_EVENTOS (PRODUTO_EVENTO INT NOT NULL,COD_OPERACAO INT NOT NULL,TIPO_OPERACAO VARCHAR(5),PRODUTO INT,ESTAMPA INT,COR INT,TAMANHO VARCHAR(5),QUANTIDADE INT NOT NULL,"
+                                                                                                        + "PRECO DECIMAL(14,2),DESCONTO DECIMAL(14,2),V_ICMSS DECIMAL(14,2),V_ICMS DECIMAL(14,2),V_IPI DECIMAL(14,2),V_ISS DECIMAL(14,2),V_PIS DECIMAL(14,2),V_CONFINS DECIMAL(14,2));";
+                                                                            CommandInsert7.ExecuteNonQuery();
+                                                                            objConx07.Close();
+                                                                        }
+                                                                        objConx07.Close();
+
                                                                         var requisicaoWeb7 = WebRequest.CreateHttp($"{ConnectProdutosEventos}" + "?$format=json");
                                                                         requisicaoWeb7.Method = "GET";
                                                                         requisicaoWeb7.Headers.Add("Authorization", $"{Authorization}");
@@ -700,8 +834,8 @@ namespace DashZonaCriativa
 
                                                                                     var command7 = objConx7.CreateCommand();
                                                                                     command7.CommandText = "INSERT INTO PRODUTOS_EVENTOS (PRODUTO_EVENTO,COD_OPERACAO,TIPO_OPERACAO,PRODUTO,ESTAMPA,COR,TAMANHO,QUANTIDADE,PRECO,DESCONTO,V_ICMSS,V_ICMS,V_IPI,V_ISS,V_PIS,V_CONFINS)" +
-                                                                                                                $"VALUES({ppo.ProdutoEvento}," + $"{ppo.CodOperacao}," + $"\"{ppo.TipoOperacao}\", " + $"{ppo.Produto}," + $"{ppo.Estampa}," 
-                                                                                                                + $"{ppo.Cor}," + $"\"{ppo.Tamanho}\"," + $"{ppo.Quantidade}," + $"\"{ppo.Preco}\", " + $"\"{ppo.Desconto}\", " + $"\"{ppo.VIcmss}\", " 
+                                                                                                                $"VALUES({ppo.ProdutoEvento}," + $"{ppo.CodOperacao}," + $"\"{ppo.TipoOperacao}\", " + $"{ppo.Produto}," + $"{ppo.Estampa},"
+                                                                                                                + $"{ppo.Cor}," + $"\"{ppo.Tamanho}\"," + $"{ppo.Quantidade}," + $"\"{ppo.Preco}\", " + $"\"{ppo.Desconto}\", " + $"\"{ppo.VIcmss}\", "
                                                                                                                 + $"\"{ppo.VIcms}\", " + $"\"{ppo.VIpi}\", " + $"\"{ppo.VIss}\", " + $"\"{ppo.VPis}\", " + $"\"{ppo.VConfins}\")";
 
                                                                                     command7.ExecuteNonQuery();
@@ -710,8 +844,7 @@ namespace DashZonaCriativa
                                                                                 }
                                                                                 catch (MySqlException etv)
                                                                                 {
-                                                                                    Console.WriteLine(etv.Message);
-                                                                                    Console.WriteLine($"ID Produtos Eventos :  {ppo.CodOperacao} - Produto: {ppo.Produto}");
+                                                                                    Console.WriteLine($"ID Produtos Eventos :  {ppo.CodOperacao} - Produto: {ppo.Produto} - Erro: {etv.Message}");
 
                                                                                     //Verificando a pasta de Log. 
                                                                                     Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -742,6 +875,148 @@ namespace DashZonaCriativa
                                                                                         }
                                                                                     }
 
+                                                                                }
+                                                                            }
+                                                                            //Buscar os Prefaturamentos e Incluir no Banco de dados MySQL.
+                                                                            try
+                                                                            {
+                                                                                MySqlConnection objConx08 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                                                                                objConx08.Open();
+
+                                                                                var command08 = objConx08.CreateCommand();
+                                                                                command08.CommandText = "SELECT COUNT(*) AS N FROM PREFATURAMENTOS";
+                                                                                var retCommnad8 = command08.ExecuteReaderAsync();
+                                                                                string fault8 = retCommnad8.Status.ToString();
+
+                                                                                if (fault8 == "Faulted")
+                                                                                {
+                                                                                    Console.WriteLine("Criando Tabela de Prefaturamentos...");
+                                                                                    var CommandInsert8 = objConx08.CreateCommand();
+                                                                                    CommandInsert8.CommandText = "CREATE TABLE PREFATURAMENTOS (PREFATURAMENTO INT NOT NULL,NUMERO VARCHAR(30),DATA VARCHAR(20),FILIAL INT,CLIENTE INT,PEDIDOV INT,EXPEDICAO VARCHAR(1),DATA_EXPEDICAO VARCHAR(20),PODECONFERIR VARCHAR(1),DATA_PODECONFERIR VARCHAR(20),"
+                                                                                                                + "CONFERINDO VARCHAR(1),CONFERIDO VARCHAR(1),DATACONFERIDO VARCHAR(20),ENTREGUE VARCHAR(1),TRANSPORTADORA VARCHAR(255),OBS_CLI_FAT VARCHAR(255));";
+                                                                                    CommandInsert8.ExecuteNonQuery();
+                                                                                    objConx08.Close();
+                                                                                }
+                                                                                objConx08.Close();
+
+                                                                                var requisicaoWeb8 = WebRequest.CreateHttp($"{ConnectPrefaturamentos}" + "?$format=json");
+                                                                                requisicaoWeb8.Method = "GET";
+                                                                                requisicaoWeb8.Headers.Add("Authorization", $"{Authorization}");
+                                                                                requisicaoWeb8.UserAgent = "RequisicaoAPIGET";
+                                                                                requisicaoWeb8.Timeout = 1300000;
+                                                                                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+
+                                                                                Console.WriteLine("Carregando Prefaturamentos...");
+                                                                                using (var resposta8 = requisicaoWeb8.GetResponse())
+                                                                                {
+                                                                                    var streamDados8 = resposta8.GetResponseStream();
+                                                                                    StreamReader reader8 = new StreamReader(streamDados8);
+                                                                                    object objResponse8 = reader8.ReadToEnd();
+                                                                                    var statusCodigo8 = ((System.Net.HttpWebResponse)resposta8).StatusCode;
+
+                                                                                    ListaPrefaturamentos pft = JsonConvert.DeserializeObject<ListaPrefaturamentos>(objResponse8.ToString());
+
+                                                                                    Console.WriteLine("Listando e Incluindo Prefaturamentos...");
+                                                                                    int pref = 0;
+                                                                                    foreach (var ptf in pft.Value)
+                                                                                    {
+                                                                                        try
+                                                                                        {
+                                                                                            MySqlConnection objConx8 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                                                                                            objConx8.Open();
+
+                                                                                            while (pref < 1)
+                                                                                            {
+                                                                                                if (pref == 1)
+                                                                                                    break;
+                                                                                                var commandelet = objConx8.CreateCommand();
+                                                                                                commandelet.CommandText = "DELETE FROM PREFATURAMENTOS";
+                                                                                                commandelet.ExecuteNonQuery();
+                                                                                                pref++;
+                                                                                            }
+
+                                                                                            var command8 = objConx8.CreateCommand();
+                                                                                            command8.CommandText = "INSERT INTO PREFATURAMENTOS (PREFATURAMENTO,NUMERO,DATA,FILIAL,CLIENTE,PEDIDOV,EXPEDICAO,DATA_EXPEDICAO,PODECONFERIR,DATA_PODECONFERIR,CONFERINDO,CONFERIDO,DATACONFERIDO,ENTREGUE,TRANSPORTADORA,OBS_CLI_FAT)" +
+                                                                                                                        $"VALUES({ptf.Prefaturamento}," + $"\"{ptf.Numero}\", " + $"\"{ptf.Data}\", " + $"{ptf.Filial}," + $"{ptf.Cliente},"
+                                                                                                                        + $"{ptf.Pedidov}," + $"\"{ptf.Expedicao}\"," + $"\"{ptf.DataExpedicao}\", " + $"\"{ptf.Podeconferir}\", " + $"\"{ptf.DataPodeconferir}\", " + $"\"{ptf.Conferindo}\","
+                                                                                                                        + $"\"{ptf.Conferido}\"," + $"\"{ptf.Dataconferido}\"," + $"\"{ptf.Entregue}\"," + $"\"{ptf.Transportadora}\"," + $"\"{ptf.ObsCliFat}\")";
+
+                                                                                            command8.ExecuteNonQuery();
+                                                                                            objConx8.Close();
+
+                                                                                        }
+                                                                                        catch (MySqlException etv)
+                                                                                        {
+                                                                                            Console.WriteLine($"ID Prefaturamento :  {ptf.Prefaturamento} - Cliente: {ptf.Cliente} - Erro: {etv.Message}");
+
+                                                                                            //Verificando a pasta de Log. 
+                                                                                            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                                                            string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                                                            //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                                                            if (!File.Exists(path))
+                                                                                            {
+                                                                                                DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                                                                foreach (FileInfo fi in dir.GetFiles())
+                                                                                                {
+                                                                                                    fi.Delete();
+                                                                                                }
+
+                                                                                                string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                                                                StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                                                                writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Prefaturamento :  {ptf.Prefaturamento} - Cliente: {ptf.Cliente} - Erro: {etv.Message}");
+                                                                                                writer1.Close();
+
+                                                                                            }
+                                                                                            //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                                                            else
+                                                                                            {
+                                                                                                using (StreamWriter sw = File.AppendText(path))
+                                                                                                {
+                                                                                                    sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Prefaturamento :  {ptf.Prefaturamento} - Cliente: {ptf.Cliente} - Erro: {etv.Message}");
+                                                                                                }
+                                                                                            }
+
+                                                                                        }
+                                                                                    }
+
+
+                                                                                    //PROXIMO BLOCO!!!
+
+                                                                                }
+                                                                            }
+                                                                            catch (WebException wpf)
+                                                                            {
+                                                                                Console.WriteLine(wpf.Message);
+
+                                                                                //Verificando a pasta de Log. 
+                                                                                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                                                string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                                                //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                                                if (!File.Exists(path))
+                                                                                {
+                                                                                    DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                                                    foreach (FileInfo fi in dir.GetFiles())
+                                                                                    {
+                                                                                        fi.Delete();
+                                                                                    }
+
+                                                                                    string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                                                    StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                                                    writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{wpf.Message}");
+                                                                                    writer1.Close();
+
+                                                                                }
+                                                                                //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                                                else
+                                                                                {
+                                                                                    using (StreamWriter sw = File.AppendText(path))
+                                                                                    {
+                                                                                        sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{wpf.Message}");
+                                                                                    }
                                                                                 }
                                                                             }
                                                                         }
@@ -999,6 +1274,7 @@ namespace DashZonaCriativa
                         }
 
                     }
+
                     Console.WriteLine("Concluído...");
                 }
 
@@ -1039,4 +1315,5 @@ namespace DashZonaCriativa
             }
         }
     }
+
 }

@@ -32,14 +32,8 @@ namespace ListaPrecosAPI
         [JsonProperty("descricao1")]
         public string Descricao1 { get; set; }
 
-        [JsonProperty("cod_est")]
-        public string CodEst { get; set; }
-
         [JsonProperty("estampa")]
         public string Estampa { get; set; }
-
-        [JsonProperty("cod_cor")]
-        public string CodCor { get; set; }
 
         [JsonProperty("cor")]
         public string Cor { get; set; }
