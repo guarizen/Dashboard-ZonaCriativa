@@ -1,6 +1,7 @@
 ﻿using ListaClientesAPI;
 using ListaEntradasAPI;
 using ListaFiliaisAPI;
+using ListaPedidosVendaAPI;
 using ListaPrecosAPI;
 using ListaPrefaturamentosAPI;
 using ListaProdutosAPI;
@@ -8,6 +9,7 @@ using ListaProdutosEventosAPI;
 using ListaProdutosPrefatAPI;
 using ListaRepresentantesAPI;
 using ListaSaidasAPI;
+using ListaTiposPedidosAPI;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
@@ -44,6 +46,8 @@ namespace DashZonaCriativa
             var ConnectProdutosEventos = ConfigurationManager.AppSettings["ConnectProdutosEventos"];
             var ConnectPrefaturamentos = ConfigurationManager.AppSettings["ConnectPrefaturamentos"];
             var ConnectProdutosPrefat = ConfigurationManager.AppSettings["ConnectProdutosPrefat"];
+            var ConnectTipoPedidos = ConfigurationManager.AppSettings["ConnectTipoPedidos"];
+            var ConnectPedidosVenda = ConfigurationManager.AppSettings["ConnectPedidosVenda"];
             var Authorization = ConfigurationManager.AppSettings["Authorization"];
 
             //Buscar Produtos e Incluir no Banco de dados MySQL.
@@ -1079,7 +1083,278 @@ namespace DashZonaCriativa
                                                                                                             sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Produto Prefat :  {pptf.ProdutoPrefat} - Prefaturamento: {pptf.Prefaturamento} - Erro: {etv.Message}");
                                                                                                         }
                                                                                                     }
+                                                                                                }
+                                                                                            }
+                                                                                            //Buscar os Tipos dos Pedidos e Incluir no Banco de dados MySQL.
+                                                                                            try
+                                                                                            {
+                                                                                                MySqlConnection objConx10 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                                                                                                objConx10.Open();
 
+                                                                                                var command10 = objConx10.CreateCommand();
+                                                                                                command10.CommandText = "SELECT COUNT(*) AS N FROM TIPOS_PEDIDO";
+                                                                                                var retCommnad10 = command10.ExecuteReaderAsync();
+                                                                                                string fault10 = retCommnad10.Status.ToString();
+
+                                                                                                if (fault10 == "Faulted")
+                                                                                                {
+                                                                                                    Console.WriteLine("Criando Tabela Tipos Pedido...");
+                                                                                                    var CommandInsert10 = objConx10.CreateCommand();
+                                                                                                    CommandInsert10.CommandText = "CREATE TABLE TIPOS_PEDIDO (TIPO_PEDIDO INT NOT NULL,DESCRICAO VARCHAR(255));";
+                                                                                                    CommandInsert10.ExecuteNonQuery();
+                                                                                                    objConx10.Close();
+                                                                                                }
+                                                                                                objConx10.Close();
+
+                                                                                                var requisicaoWeb10 = WebRequest.CreateHttp($"{ConnectTipoPedidos}" + "?$format=json");
+                                                                                                requisicaoWeb10.Method = "GET";
+                                                                                                requisicaoWeb10.Headers.Add("Authorization", $"{Authorization}");
+                                                                                                requisicaoWeb10.UserAgent = "RequisicaoAPIGET";
+                                                                                                requisicaoWeb10.Timeout = 1300000;
+                                                                                                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+
+                                                                                                Console.WriteLine("Listando e Incluindo Tipos Pedido...");
+                                                                                                using (var resposta10 = requisicaoWeb10.GetResponse())
+                                                                                                {
+                                                                                                    var streamDados10 = resposta10.GetResponseStream();
+                                                                                                    StreamReader reader10 = new StreamReader(streamDados10);
+                                                                                                    object objResponse10 = reader10.ReadToEnd();
+                                                                                                    var statusCodigo10 = ((System.Net.HttpWebResponse)resposta10).StatusCode;
+
+                                                                                                    ListaTipoPedidos tp = JsonConvert.DeserializeObject<ListaTipoPedidos>(objResponse10.ToString());
+
+                                                                                                    int tps = 0;
+                                                                                                    foreach (var ttp in tp.Value)
+                                                                                                    {
+                                                                                                        try
+                                                                                                        {
+                                                                                                            MySqlConnection objConx010 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                                                                                                            objConx010.Open();
+
+                                                                                                            while (tps < 1)
+                                                                                                            {
+                                                                                                                if (tps == 1)
+                                                                                                                    break;
+                                                                                                                var commandelet = objConx010.CreateCommand();
+                                                                                                                commandelet.CommandText = "DELETE FROM TIPOS_PEDIDO";
+                                                                                                                commandelet.ExecuteNonQuery();
+                                                                                                                tps++;
+                                                                                                            }
+
+                                                                                                            var command010 = objConx010.CreateCommand();
+                                                                                                            command010.CommandText = "INSERT INTO TIPOS_PEDIDO (TIPO_PEDIDO,DESCRICAO)" +
+                                                                                                                                        $"VALUES({ttp.TipoPedido}," + $"\"{ttp.Descricao}\")";
+
+                                                                                                            command010.ExecuteNonQuery();
+                                                                                                            objConx010.Close();
+
+                                                                                                        }
+                                                                                                        catch (MySqlException etv)
+                                                                                                        {
+                                                                                                            Console.WriteLine($"ID Tipos Pedido :  {ttp.TipoPedido} - Descricao: {ttp.Descricao} - Erro: {etv.Message}");
+
+                                                                                                            //Verificando a pasta de Log. 
+                                                                                                            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                                                                            string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                                                                            //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                                                                            if (!File.Exists(path))
+                                                                                                            {
+                                                                                                                DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                                                                                foreach (FileInfo fi in dir.GetFiles())
+                                                                                                                {
+                                                                                                                    fi.Delete();
+                                                                                                                }
+
+                                                                                                                string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                                                                                StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                                                                                writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Tipos Pedido :  {ttp.TipoPedido} - Descricao: {ttp.Descricao} - Erro: {etv.Message}");
+                                                                                                                writer1.Close();
+
+                                                                                                            }
+                                                                                                            //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                                                                            else
+                                                                                                            {
+                                                                                                                using (StreamWriter sw = File.AppendText(path))
+                                                                                                                {
+                                                                                                                    sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Tipos Pedido :  {ttp.TipoPedido} - Descricao: {ttp.Descricao} - Erro: {etv.Message}");
+                                                                                                                }
+                                                                                                            }
+                                                                                                        }
+                                                                                                    }
+                                                                                                    //Busca Pedidos de Venda e Inclui no Banco de Dados MYSQL.
+                                                                                                    try
+                                                                                                    {
+                                                                                                        MySqlConnection objConx11 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                                                                                                        objConx11.Open();
+
+                                                                                                        var command11 = objConx11.CreateCommand();
+                                                                                                        command11.CommandText = "SELECT COUNT(*) AS N FROM PEDIDO_VENDA";
+                                                                                                        var retCommnad11 = command11.ExecuteReaderAsync();
+                                                                                                        string fault11 = retCommnad11.Status.ToString();
+
+                                                                                                        if (fault11 == "Faulted")
+                                                                                                        {
+                                                                                                            Console.WriteLine("Criando Tabela Pedido de Venda...");
+                                                                                                            var CommandInsert11 = objConx11.CreateCommand();
+                                                                                                            CommandInsert11.CommandText = "CREATE TABLE PEDIDO_VENDA (PEDIDOV INT NOT NULL,COD_PEDIDOV VARCHAR(30),TIPO_PEDIDO INT,CLIENTE INT,CIDADE VARCHAR(255),ESTADO VARCHAR(5),REPRESENTANTE INT,DATA_EMISSAO VARCHAR(20),DATA_ENTREGA VARCHAR(20),ORCAMENTO VARCHAR(1),"
+                                                                                                                                         + "APROVADO VARCHAR(1),EFETUADO VARCHAR(1),QTDE_PEDIDA INT,QTDE_ENTREGAR INT,QTDE_ENTREGUE INT,QTDE_CANCELADA INT,VALOR_PEDIDO DECIMAL(14,2),VALOR_ENTREGAR DECIMAL(14,2),VALOR_ENTREGUE DECIMAL(14,2),VALOR_CANCELADO DECIMAL(14,2));";
+                                                                                                            CommandInsert11.ExecuteNonQuery();
+                                                                                                            objConx11.Close();
+                                                                                                        }
+                                                                                                        objConx11.Close();
+
+                                                                                                        var requisicaoWeb11 = WebRequest.CreateHttp($"{ConnectPedidosVenda}" + "?$format=json");
+                                                                                                        requisicaoWeb11.Method = "GET";
+                                                                                                        requisicaoWeb11.Headers.Add("Authorization", $"{Authorization}");
+                                                                                                        requisicaoWeb11.UserAgent = "RequisicaoAPIGET";
+                                                                                                        requisicaoWeb11.Timeout = 1300000;
+                                                                                                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+
+                                                                                                        Console.WriteLine("Listando e Incluindo Pedidos de Venda...");
+                                                                                                        using (var resposta11 = requisicaoWeb11.GetResponse())
+                                                                                                        {
+                                                                                                            var streamDados11 = resposta11.GetResponseStream();
+                                                                                                            StreamReader reader11 = new StreamReader(streamDados11);
+                                                                                                            object objResponse11 = reader11.ReadToEnd();
+                                                                                                            var statusCodigo11 = ((System.Net.HttpWebResponse)resposta11).StatusCode;
+
+                                                                                                            ListaPedidosVenda pv = JsonConvert.DeserializeObject<ListaPedidosVenda>(objResponse11.ToString());
+
+                                                                                                            int pvv = 0;
+                                                                                                            foreach (var pvp in pv.Value)
+                                                                                                            {
+                                                                                                                try
+                                                                                                                {
+                                                                                                                    MySqlConnection objConx011 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                                                                                                                    objConx011.Open();
+
+                                                                                                                    while (pvv < 1)
+                                                                                                                    {
+                                                                                                                        if (pvv == 1)
+                                                                                                                            break;
+                                                                                                                        var commandelet = objConx011.CreateCommand();
+                                                                                                                        commandelet.CommandText = "DELETE FROM PEDIDO_VENDA";
+                                                                                                                        commandelet.ExecuteNonQuery();
+                                                                                                                        pvv++;
+                                                                                                                    }
+
+                                                                                                                    var command011 = objConx011.CreateCommand();
+                                                                                                                    command011.CommandText = "INSERT INTO PEDIDO_VENDA (PEDIDOV,COD_PEDIDOV,TIPO_PEDIDO,CLIENTE,CIDADE,ESTADO,REPRESENTANTE,DATA_EMISSAO,DATA_ENTREGA,ORCAMENTO,APROVADO,EFETUADO,QTDE_PEDIDA,QTDE_ENTREGAR,QTDE_ENTREGUE,QTDE_CANCELADA,VALOR_PEDIDO,VALOR_ENTREGAR,VALOR_ENTREGUE,VALOR_CANCELADO)" +
+                                                                                                                                                $"VALUES({pvp.Pedidov}," + $"\"{pvp.CodPedidov}\"," + $"{pvp.TipoPedido}," + $"{pvp.Cliente}," + $"\"{pvp.Cidade}\"," + $"\"{pvp.Estado}\"," + $"{pvp.Representante},"
+                                                                                                                                                + $"\"{pvp.DataEmissao}\"," + $"\"{pvp.DataEntrega}\"," + $"\"{pvp.Orcamento}\"," + $"\"{pvp.Aprovado}\"," + $"\"{pvp.Efetuado}\"," + $"{pvp.QtdePedida},"
+                                                                                                                                                + $"{pvp.QtdeEntregar}," + $"{pvp.QtdeEntregue}," + $"{pvp.QtdeCancelada}," + $"{pvp.ValorPedido}," + $"{pvp.ValorEntregar}," + $"{pvp.ValorEntregue}," + $"{pvp.ValorCancelado}" + ")";
+
+                                                                                                                    command011.ExecuteNonQuery();
+                                                                                                                    objConx011.Close();
+
+                                                                                                                }
+                                                                                                                catch (MySqlException etv)
+                                                                                                                {
+                                                                                                                    Console.WriteLine($"ID Pedido de Venda :  {pvp.Pedidov} - Codigo Pedido: {pvp.CodPedidov} - Erro: {etv.Message}");
+
+                                                                                                                    //Verificando a pasta de Log. 
+                                                                                                                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                                                                                    string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                                                                                    //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                                                                                    if (!File.Exists(path))
+                                                                                                                    {
+                                                                                                                        DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                                                                                        foreach (FileInfo fi in dir.GetFiles())
+                                                                                                                        {
+                                                                                                                            fi.Delete();
+                                                                                                                        }
+
+                                                                                                                        string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                                                                                        StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                                                                                        writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Pedido de Venda :  {pvp.Pedidov} - Codigo Pedido: {pvp.CodPedidov} - Erro: {etv.Message}");
+                                                                                                                        writer1.Close();
+
+                                                                                                                    }
+                                                                                                                    //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                                                                                    else
+                                                                                                                    {
+                                                                                                                        using (StreamWriter sw = File.AppendText(path))
+                                                                                                                        {
+                                                                                                                            sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Pedido de Venda :  {pvp.Pedidov} - Codigo Pedido: {pvp.CodPedidov} - Erro: {etv.Message}");
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                }
+                                                                                                            }
+                                                                                                            //next block
+
+
+                                                                                                        }
+                                                                                                    }
+                                                                                                    catch (WebException epp)
+                                                                                                    {
+                                                                                                        Console.WriteLine(epp.Message);
+
+                                                                                                        //Verificando a pasta de Log. 
+                                                                                                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                                                                        string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                                                                        //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                                                                        if (!File.Exists(path))
+                                                                                                        {
+                                                                                                            DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                                                                            foreach (FileInfo fi in dir.GetFiles())
+                                                                                                            {
+                                                                                                                fi.Delete();
+                                                                                                            }
+
+                                                                                                            string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                                                                            StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                                                                            writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{epp.Message}");
+                                                                                                            writer1.Close();
+
+                                                                                                        }
+                                                                                                        //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                                                                        else
+                                                                                                        {
+                                                                                                            using (StreamWriter sw = File.AppendText(path))
+                                                                                                            {
+                                                                                                                sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{epp.Message}");
+                                                                                                            }
+                                                                                                        }
+                                                                                                    }
+                                                                                                }
+                                                                                            }
+                                                                                            catch (WebException epp)
+                                                                                            {
+                                                                                                Console.WriteLine(epp.Message);
+
+                                                                                                //Verificando a pasta de Log. 
+                                                                                                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                                                                string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                                                                //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                                                                if (!File.Exists(path))
+                                                                                                {
+                                                                                                    DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                                                                    foreach (FileInfo fi in dir.GetFiles())
+                                                                                                    {
+                                                                                                        fi.Delete();
+                                                                                                    }
+
+                                                                                                    string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                                                                    StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                                                                    writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{epp.Message}");
+                                                                                                    writer1.Close();
+
+                                                                                                }
+                                                                                                //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                                                                else
+                                                                                                {
+                                                                                                    using (StreamWriter sw = File.AppendText(path))
+                                                                                                    {
+                                                                                                        sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{epp.Message}");
+                                                                                                    }
                                                                                                 }
                                                                                             }
                                                                                         }
