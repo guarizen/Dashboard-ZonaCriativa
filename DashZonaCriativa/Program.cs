@@ -1,6 +1,7 @@
 ﻿using ListaClientesAPI;
 using ListaEntradasAPI;
 using ListaFiliaisAPI;
+using ListaNotasFiscaisAPI;
 using ListaPedidosVendaAPI;
 using ListaPrecosAPI;
 using ListaPrefaturamentosAPI;
@@ -50,6 +51,7 @@ namespace DashZonaCriativa
             var ConnectTipoPedidos = ConfigurationManager.AppSettings["ConnectTipoPedidos"];
             var ConnectPedidosVenda = ConfigurationManager.AppSettings["ConnectPedidosVenda"];
             var ConnectProdutosPedidov = ConfigurationManager.AppSettings["ConnectProdutosPedidov"];
+            var ConnectNotasFiscais = ConfigurationManager.AppSettings["ConnectNotasFiscais"];
             var Authorization = ConfigurationManager.AppSettings["Authorization"];
 
             //Buscar Produtos e Incluir no Banco de dados MySQL.
@@ -1386,8 +1388,141 @@ namespace DashZonaCriativa
                                                                                                                             }
                                                                                                                         }
                                                                                                                     }
+                                                                                                                    //Busca Notas Fiscais e Inclui no Banco de Dados MYSQL.
+                                                                                                                    try
+                                                                                                                    {
+                                                                                                                        MySqlConnection objConx13 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                                                                                                                        objConx13.Open();
 
-                                                                                                                    //NEXT BLOCK
+                                                                                                                        var command13 = objConx13.CreateCommand();
+                                                                                                                        command13.CommandText = "SELECT COUNT(*) AS N FROM NF";
+                                                                                                                        var retCommnad13 = command13.ExecuteReaderAsync();
+                                                                                                                        string fault13 = retCommnad13.Status.ToString();
+
+                                                                                                                        if (fault13 == "Faulted")
+                                                                                                                        {
+                                                                                                                            Console.WriteLine("Criando Tabela de Notas Fiscais...");
+                                                                                                                            var CommandInsert13 = objConx13.CreateCommand();
+                                                                                                                            CommandInsert13.CommandText = "CREATE TABLE NF (COD_OPERACAO INT NOT NULL,TIPO_OPERACAO VARCHAR(5),DATA VARCHAR(20),DATA_HORA VARCHAR(20),NOTA INT,SERIE VARCHAR(5),STATUS INT,VALOR DECIMAL(14, 2),ICMS DECIMAL(14,2),V_ICMS DECIMAL(14,2),ICMSS DECIMAL(14,2),"
+                                                                                                                                                        + "V_ICMSS DECIMAL(14,2),IPI DECIMAL(14,2),V_IPI DECIMAL(14,2),FILIAL INT,IDNFE VARCHAR(80),CIDADE VARCHAR(255),ESTADO VARCHAR(5));";
+                                                                                                                            CommandInsert13.ExecuteNonQuery();
+                                                                                                                            objConx13.Close();
+                                                                                                                        }
+                                                                                                                        objConx13.Close();
+
+                                                                                                                        var requisicaoWeb13 = WebRequest.CreateHttp($"{ConnectNotasFiscais}" + "?$format=json");
+                                                                                                                        requisicaoWeb13.Method = "GET";
+                                                                                                                        requisicaoWeb13.Headers.Add("Authorization", $"{Authorization}");
+                                                                                                                        requisicaoWeb13.UserAgent = "RequisicaoAPIGET";
+                                                                                                                        requisicaoWeb13.Timeout = 1300000;
+                                                                                                                        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11 | SecurityProtocolType.Tls;
+
+                                                                                                                        Console.WriteLine("Listando e Incluindo Notas Fiscais...");
+                                                                                                                        using (var resposta13 = requisicaoWeb13.GetResponse())
+                                                                                                                        {
+                                                                                                                            var streamDados13 = resposta13.GetResponseStream();
+                                                                                                                            StreamReader reader13 = new StreamReader(streamDados13);
+                                                                                                                            object objResponse13 = reader13.ReadToEnd();
+                                                                                                                            var statusCodigo13 = ((System.Net.HttpWebResponse)resposta13).StatusCode;
+
+                                                                                                                            ListaNotasFicais nf = JsonConvert.DeserializeObject<ListaNotasFicais>(objResponse13.ToString());
+
+                                                                                                                            int nfo = 0;
+                                                                                                                            foreach (var nfl in nf.Value)
+                                                                                                                            {
+                                                                                                                                try
+                                                                                                                                {
+                                                                                                                                    MySqlConnection objConx013 = new MySqlConnection($"Server={ConnectMySQLDB};Database={DatabaseMySQLDB};Uid={UserMySQLDB};Pwd={PassMySQLDB}");
+                                                                                                                                    objConx013.Open();
+
+                                                                                                                                    while (nfo < 1)
+                                                                                                                                    {
+                                                                                                                                        if (nfo == 1)
+                                                                                                                                            break;
+                                                                                                                                        var commandelet = objConx013.CreateCommand();
+                                                                                                                                        commandelet.CommandText = "DELETE FROM NF";
+                                                                                                                                        commandelet.ExecuteNonQuery();
+                                                                                                                                        nfo++;
+                                                                                                                                    }
+
+                                                                                                                                    var command013 = objConx013.CreateCommand();
+                                                                                                                                    command013.CommandText = "INSERT INTO NF (COD_OPERACAO,TIPO_OPERACAO,DATA,DATA_HORA,NOTA,SERIE,STATUS,VALOR,ICMS,V_ICMS,ICMSS,V_ICMSS,IPI,V_IPI,FILIAL,IDNFE,CIDADE,ESTADO)" +
+                                                                                                                                                                $"VALUES({nfl.CodOperacao}," + $"\"{nfl.TipoOperacao}\"," + $"\"{nfl.Data}\"," + $"\"{nfl.DataHora}\"," + $"{nfl.Nota}," + $"\"{nfl.Serie}\"," + $"{nfl.Status}," + $"{nfl.Valor}," + $"{nfl.Icms}," + $"{nfl.VIcms},"
+                                                                                                                                                                + $"{nfl.Icmss}," + $"{nfl.VIcmss}," + $"{nfl.Ipi}," + $"{nfl.VIpi}," + $"{nfl.Filial}," + $"\"{nfl.Idnfe}\"," + $"\"{nfl.Cidade}\"," + $"\"{nfl.Estado}\")";
+
+                                                                                                                                    command013.ExecuteNonQuery();
+                                                                                                                                    objConx013.Close();
+
+                                                                                                                                }
+                                                                                                                                catch (MySqlException etv)
+                                                                                                                                {
+                                                                                                                                    Console.WriteLine($"ID Nota Fiscal :  {nfl.CodOperacao} - Nota: {nfl.Nota} - Erro: {etv.Message}");
+
+                                                                                                                                    //Verificando a pasta de Log. 
+                                                                                                                                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                                                                                                    string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                                                                                                    //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                                                                                                    if (!File.Exists(path))
+                                                                                                                                    {
+                                                                                                                                        DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                                                                                                        foreach (FileInfo fi in dir.GetFiles())
+                                                                                                                                        {
+                                                                                                                                            fi.Delete();
+                                                                                                                                        }
+
+                                                                                                                                        string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                                                                                                        StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                                                                                                        writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Nota Fiscal :  {nfl.CodOperacao} - Nota: {nfl.Nota} - Erro: {etv.Message}");
+                                                                                                                                        writer1.Close();
+
+                                                                                                                                    }
+                                                                                                                                    //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                                                                                                    else
+                                                                                                                                    {
+                                                                                                                                        using (StreamWriter sw = File.AppendText(path))
+                                                                                                                                        {
+                                                                                                                                            sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"ID Nota Fiscal :  {nfl.CodOperacao} - Nota: {nfl.Nota} - Erro: {etv.Message}");
+                                                                                                                                        }
+                                                                                                                                    }
+                                                                                                                                }
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                    catch (WebException epp)
+                                                                                                                    {
+                                                                                                                        Console.WriteLine(epp.Message);
+
+                                                                                                                        //Verificando a pasta de Log. 
+                                                                                                                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                                                                                                                        string path = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+
+                                                                                                                        //Verifica se o arquivo de Log não existe e inclui as informações.
+                                                                                                                        if (!File.Exists(path))
+                                                                                                                        {
+                                                                                                                            DirectoryInfo dir = new DirectoryInfo(FileLog);
+
+                                                                                                                            foreach (FileInfo fi in dir.GetFiles())
+                                                                                                                            {
+                                                                                                                                fi.Delete();
+                                                                                                                            }
+
+                                                                                                                            string nomeArquivo1 = @"C:\Dashboard-Log\" + DateTimeOffset.Now.ToString("ddMMyyyy") + ".log";
+                                                                                                                            StreamWriter writer1 = new StreamWriter(nomeArquivo1);
+                                                                                                                            writer1.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{epp.Message}");
+                                                                                                                            writer1.Close();
+
+                                                                                                                        }
+                                                                                                                        //Verifica se o arquivo de Log já existe e inclui as informações.
+                                                                                                                        else
+                                                                                                                        {
+                                                                                                                            using (StreamWriter sw = File.AppendText(path))
+                                                                                                                            {
+                                                                                                                                sw.WriteLine($"Data: {DateTimeOffset.Now.ToString("dd/MM/yyyy HH:mm:ss")}" + " - " + $"{epp.Message}");
+                                                                                                                            }
+                                                                                                                        }
+                                                                                                                    }
                                                                                                                 }
                                                                                                             }
                                                                                                             catch (WebException epp)
