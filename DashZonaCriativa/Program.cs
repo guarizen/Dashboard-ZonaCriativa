@@ -52,7 +52,17 @@ namespace DashZonaCriativa
             var ConnectPedidosVenda = ConfigurationManager.AppSettings["ConnectPedidosVenda"];
             var ConnectProdutosPedidov = ConfigurationManager.AppSettings["ConnectProdutosPedidov"];
             var ConnectNotasFiscais = ConfigurationManager.AppSettings["ConnectNotasFiscais"];
+            var Data_Inicial = ConfigurationManager.AppSettings["Data_Inicial"];
+            var Data_Final = ConfigurationManager.AppSettings["Data_Final"];
             var Authorization = ConfigurationManager.AppSettings["Authorization"];
+
+            string iDateIni = $"{Data_Inicial}";
+            DateTime oDate = DateTime.Parse(iDateIni);
+            string DateIni = (oDate.Year + "-" + oDate.Month + "-" + oDate.Day);
+
+            string iDateFim = $"{Data_Final}";
+            DateTime oDateF = DateTime.Parse(iDateFim);
+            string DateFim = (oDateF.Year + "-" + oDateF.Month + "-" + oDateF.Day);
 
             //Buscar Produtos e Incluir no Banco de dados MySQL.
             try
@@ -72,8 +82,13 @@ namespace DashZonaCriativa
                     commandinsert1.CommandText = "CREATE TABLE PRODUTOS (PRODUTO INT NOT NULL,COD_PRODUTO VARCHAR(30),DESCRICAO1 VARCHAR(255),REFERENCIA VARCHAR(255),ESTAMPA VARCHAR(255),COR VARCHAR(255),TAMANHO VARCHAR(5),COD_NCM VARCHAR(15),DEPARTAMENTOS VARCHAR(255),"
                                                  + "DIVISAO VARCHAR(255),GRUPO VARCHAR(255),TIPO VARCHAR(255),COLECAO VARCHAR(255),SUBCOLECAO VARCHAR(255),MARCA VARCHAR(255),CATEGORIA VARCHAR(255),STATUS VARCHAR(255),QMM INT,ALTURA VARCHAR(10),LARGURA VARCHAR(10),"
                                                  + "COMPRIMENTO VARCHAR(10),PEDIDO_BLOQUEADO VARCHAR(50),VENDA_BLOQUEADO VARCHAR(50),EAN13 VARCHAR(15),ESTOQUE_09 INT,ESTOQUE_11 INT,ESTOQUE_500 INT);";
-
                     commandinsert1.ExecuteNonQuery();
+                    
+                    Console.WriteLine("Criando Indice Tabela de Produtos...");
+                    var indiceProd = objConx0.CreateCommand();
+                    indiceProd.CommandText = "CREATE INDEX IDX_PRODUTOS ON PRODUTOS(PRODUTO,ESTAMPA,COR,TAMANHO);";
+                    indiceProd.ExecuteNonQuery();
+
                     objConx0.Close();
                 }
                 objConx0.Close();
@@ -176,8 +191,13 @@ namespace DashZonaCriativa
                             var CommandInsert2 = objConx01.CreateCommand();
                             CommandInsert2.CommandText = "CREATE TABLE PRECOS (PRODUTO INT NOT NULL,COD_PRODUTO VARCHAR(30),DESCRICAO1 VARCHAR(255),ESTAMPA VARCHAR(255),COR VARCHAR(255),"
                                                         + "TAMANHO VARCHAR(5),PRECO_214 DECIMAL(14,2),PRECO_187 DECIMAL(14,2),PRECO_224 DECIMAL(14,2),PRECO_204 DECIMAL(14,2),PRECO_205 DECIMAL(14,2));";
-
                             CommandInsert2.ExecuteNonQuery();
+
+                            Console.WriteLine("Criando Indice Tabela de Precos...");
+                            var indicePrec = objConx01.CreateCommand();
+                            indicePrec.CommandText = "CREATE INDEX IDX_PRECOS ON PRECOS(PRODUTO,ESTAMPA,COR,TAMANHO);";
+                            indicePrec.ExecuteNonQuery();
+
                             objConx01.Close();
                         }
                         objConx01.Close();
@@ -281,6 +301,12 @@ namespace DashZonaCriativa
                                     CommandInsert3.CommandText = "CREATE TABLE FILIAIS (FILIAL INT NOT NULL,COD_FILIAL VARCHAR(30),NOME VARCHAR(255),FANTASIA VARCHAR(255),CGC VARCHAR(30),CNPJ VARCHAR(30),IE VARCHAR(30),CONTA INT,"
                                                                + "TIPO_EMPRESA VARCHAR(60),E_MAIL VARCHAR(255),ENDERECO VARCHAR(255),BAIRRO VARCHAR(255),CIDADE VARCHAR(255),ESTADO VARCHAR(2),CEP VARCHAR(12));";
                                     CommandInsert3.ExecuteNonQuery();
+
+                                    Console.WriteLine("Criando Indice Tabela de Filiais...");
+                                    var indiceFili = objConx02.CreateCommand();
+                                    indiceFili.CommandText = "CREATE INDEX IDX_FILIAIS ON FILIAIS(FILIAL);";
+                                    indiceFili.ExecuteNonQuery();
+
                                     objConx02.Close();
                                 }
                                 objConx02.Close();
@@ -385,6 +411,12 @@ namespace DashZonaCriativa
                                                                         + "E_MAIL VARCHAR(255),E_MAIL_NFE VARCHAR(255),GRUPO_LOJA VARCHAR(255),REPRESENTANTE INT,COD_ENDERECO INT,ENDERECO VARCHAR(255),BAIRRO VARCHAR(255),CIDADE VARCHAR(255),ESTADO VARCHAR(2),CEP VARCHAR(12),"
                                                                         + "PAIS VARCHAR(255));";
                                             CommandInsert3.ExecuteNonQuery();
+
+                                            Console.WriteLine("Criando Indice Tabela de Clientes...");
+                                            var indiceCli = objConx03.CreateCommand();
+                                            indiceCli.CommandText = "CREATE INDEX IDX_CLIENTES ON CLIENTES(CLIENTE);";
+                                            indiceCli.ExecuteNonQuery();
+
                                             objConx03.Close();
                                         }
                                         objConx03.Close();
@@ -489,6 +521,12 @@ namespace DashZonaCriativa
                                                     CommandInsert4.CommandText = "CREATE TABLE REPRESENTANTES (REPRESENTANTE INT NOT NULL,COD_REPRESENTANTE VARCHAR(30),NOME VARCHAR(255),FANTASIA VARCHAR(255),CGC VARCHAR(30),CNPJ VARCHAR(30),IE VARCHAR(30),"
                                                                                 + "PF_PJ VARCHAR(5),E_MAIL VARCHAR(255),COD_ENDERECO INT,ENDERECO VARCHAR(255),BAIRRO VARCHAR(255),CIDADE VARCHAR(255),ESTADO VARCHAR(2),CEP VARCHAR(12),PAIS VARCHAR(255));";
                                                     CommandInsert4.ExecuteNonQuery();
+
+                                                    Console.WriteLine("Criando Indice Tabela de Representantes...");
+                                                    var indiceRep = objConx04.CreateCommand();
+                                                    indiceRep.CommandText = "CREATE INDEX IDX_REPRESENTANTES ON REPRESENTANTES(REPRESENTANTE);";
+                                                    indiceRep.ExecuteNonQuery();
+
                                                     objConx04.Close();
                                                 }
                                                 objConx04.Close();
@@ -588,12 +626,18 @@ namespace DashZonaCriativa
 
                                                         if (fault5 == "Faulted")
                                                         {
-                                                            Console.WriteLine("Criando Tabela de Movimentacoes de Saidas...");
+                                                            Console.WriteLine("Criando Tabela de Saidas...");
                                                             var CommandInsert5 = objConx05.CreateCommand();
                                                             CommandInsert5.CommandText = "CREATE TABLE SAIDAS (COD_OPERACAO INT NOT NULL,TIPO_OPERACAO VARCHAR(5),EVENTO INT,ROMANEIO VARCHAR(60),DATA VARCHAR(25),CLIENTE INT,COD_ENDERECO INT,CONDICOES_PGTO VARCHAR(255),"
                                                                                         + "FILIAL INT,CONTA INT,REPRESENTANTE INT,TRANSPORTADORA VARCHAR(255),PESO_B VARCHAR(25),PESO_L VARCHAR(25),QTDE INT,TOTAL DECIMAL(14, 2),V_FRETE DECIMAL(14,2),VALOR_JUROS DECIMAL(14,2),"
                                                                                         + "VALOR_FINAL DECIMAL(14,2),ESPECIE_VOLUME VARCHAR(255),VOLUME VARCHAR(25));";
                                                             CommandInsert5.ExecuteNonQuery();
+
+                                                            Console.WriteLine("Criando Indice Tabela de Saidas...");
+                                                            var indiceSd = objConx05.CreateCommand();
+                                                            indiceSd.CommandText = "CREATE INDEX IDX_SAIDAS ON SAIDAS(COD_OPERACAO,EVENTO,CLIENTE,COD_ENDERECO,FILIAL,REPRESENTANTE);";
+                                                            indiceSd.ExecuteNonQuery();
+
                                                             objConx05.Close();
                                                         }
                                                         objConx05.Close();
@@ -687,18 +731,24 @@ namespace DashZonaCriativa
                                                                 objConx06.Open();
 
                                                                 var command06 = objConx06.CreateCommand();
-                                                                command06.CommandText = "SELECT COUNT(*) AS N FROM SAIDAS";
+                                                                command06.CommandText = "SELECT COUNT(*) AS N FROM ENTRADAS";
                                                                 var retCommnad6 = command06.ExecuteReaderAsync();
                                                                 string fault6 = retCommnad6.Status.ToString();
 
                                                                 if (fault6 == "Faulted")
                                                                 {
-                                                                    Console.WriteLine("Criando Tabela de Movimentacoes de Saidas...");
+                                                                    Console.WriteLine("Criando Tabela de Entradas...");
                                                                     var CommandInsert6 = objConx06.CreateCommand();
                                                                     CommandInsert6.CommandText = "CREATE TABLE ENTRADAS (COD_OPERACAO INT NOT NULL,TIPO_OPERACAO VARCHAR(5),EVENTO INT,ROMANEIO VARCHAR(60),DATA VARCHAR(25),CLIENTE INT,COD_ENDERECO INT,CONDICOES_PGTO VARCHAR(255),FILIAL INT,"
                                                                                                 + "CONTA INT,REPRESENTANTE INT,TRANSPORTADORA VARCHAR(255),PESO_B VARCHAR(25),PESO_L VARCHAR(25),QTDE INT,TOTAL DECIMAL(14, 2),V_FRETE DECIMAL(14,2),VALOR_JUROS DECIMAL(14,2),VALOR_FINAL DECIMAL(14,2),"
                                                                                                 + "ESPECIE_VOLUME VARCHAR(255),VOLUME VARCHAR(25));";
                                                                     CommandInsert6.ExecuteNonQuery();
+
+                                                                    Console.WriteLine("Criando Indice Tabela de Entradas...");
+                                                                    var indiceEnt = objConx06.CreateCommand();
+                                                                    indiceEnt.CommandText = "CREATE INDEX IDX_ENTRADAS ON ENTRADAS(COD_OPERACAO,CLIENTE);";
+                                                                    indiceEnt.ExecuteNonQuery();
+
                                                                     objConx06.Close();
                                                                 }
                                                                 objConx06.Close();
@@ -799,14 +849,20 @@ namespace DashZonaCriativa
                                                                         {
                                                                             Console.WriteLine("Criando Tabela de Produtos Eventos...");
                                                                             var CommandInsert7 = objConx07.CreateCommand();
-                                                                            CommandInsert7.CommandText = "CREATE TABLE PRODUTOS_EVENTOS (PRODUTO_EVENTO INT NOT NULL,COD_OPERACAO INT NOT NULL,TIPO_OPERACAO VARCHAR(5),PRODUTO INT,ESTAMPA INT,COR INT,TAMANHO VARCHAR(5),QUANTIDADE INT NOT NULL,"
+                                                                            CommandInsert7.CommandText = "CREATE TABLE PRODUTOS_EVENTOS (PRODUTO_EVENTO INT NOT NULL,COD_OPERACAO INT NOT NULL,TIPO_OPERACAO VARCHAR(5),PEDIDO INT, PRE_FATURAMENTO INT,PRODUTO INT,ESTAMPA INT,COR INT,TAMANHO VARCHAR(5),QUANTIDADE INT NOT NULL,"
                                                                                                         + "PRECO DECIMAL(14,2),DESCONTO DECIMAL(14,2),V_ICMSS DECIMAL(14,2),V_ICMS DECIMAL(14,2),V_IPI DECIMAL(14,2),V_ISS DECIMAL(14,2),V_PIS DECIMAL(14,2),V_CONFINS DECIMAL(14,2));";
                                                                             CommandInsert7.ExecuteNonQuery();
+
+                                                                            Console.WriteLine("Criando Indice Tabela de Produtos Eventos...");
+                                                                            var indiceProde = objConx07.CreateCommand();
+                                                                            indiceProde.CommandText = "CREATE INDEX IDX_PRODUTOS_EVENTOS ON PRODUTOS_EVENTOS(PRODUTO_EVENTO,COD_OPERACAO,PEDIDO,PRE_FATURAMENTO,PRODUTO,ESTAMPA,COR,TAMANHO);";
+                                                                            indiceProde.ExecuteNonQuery();
+
                                                                             objConx07.Close();
                                                                         }
                                                                         objConx07.Close();
 
-                                                                        var requisicaoWeb7 = WebRequest.CreateHttp($"{ConnectProdutosEventos}" + "?$format=json");
+                                                                        var requisicaoWeb7 = WebRequest.CreateHttp($"{ConnectProdutosEventos}" + $"?data_inicial={DateIni}" + $"&data_final={DateFim}" + "&$format=json");
                                                                         requisicaoWeb7.Method = "GET";
                                                                         requisicaoWeb7.Headers.Add("Authorization", $"{Authorization}");
                                                                         requisicaoWeb7.UserAgent = "RequisicaoAPIGET";
@@ -843,8 +899,8 @@ namespace DashZonaCriativa
                                                                                     }
 
                                                                                     var command7 = objConx7.CreateCommand();
-                                                                                    command7.CommandText = "INSERT INTO PRODUTOS_EVENTOS (PRODUTO_EVENTO,COD_OPERACAO,TIPO_OPERACAO,PRODUTO,ESTAMPA,COR,TAMANHO,QUANTIDADE,PRECO,DESCONTO,V_ICMSS,V_ICMS,V_IPI,V_ISS,V_PIS,V_CONFINS)" +
-                                                                                                                $"VALUES({ppo.ProdutoEvento}," + $"{ppo.CodOperacao}," + $"\"{ppo.TipoOperacao}\", " + $"{ppo.Produto}," + $"{ppo.Estampa},"
+                                                                                    command7.CommandText = "INSERT INTO PRODUTOS_EVENTOS (PRODUTO_EVENTO,COD_OPERACAO,TIPO_OPERACAO,PEDIDO,PRE_FATURAMENTO,PRODUTO,ESTAMPA,COR,TAMANHO,QUANTIDADE,PRECO,DESCONTO,V_ICMSS,V_ICMS,V_IPI,V_ISS,V_PIS,V_CONFINS)" +
+                                                                                                                $"VALUES({ppo.ProdutoEvento}," + $"{ppo.CodOperacao}," + $"\"{ppo.TipoOperacao}\", " + $"{ppo.Pedido}," + $"{ppo.PreFaturamento}," + $"{ppo.Produto}," + $"{ppo.Estampa},"
                                                                                                                 + $"{ppo.Cor}," + $"\"{ppo.Tamanho}\"," + $"{ppo.Quantidade}," + $"\"{ppo.Preco}\", " + $"\"{ppo.Desconto}\", " + $"\"{ppo.VIcmss}\", "
                                                                                                                 + $"\"{ppo.VIcms}\", " + $"\"{ppo.VIpi}\", " + $"\"{ppo.VIss}\", " + $"\"{ppo.VPis}\", " + $"\"{ppo.VConfins}\")";
 
@@ -902,9 +958,15 @@ namespace DashZonaCriativa
                                                                                 {
                                                                                     Console.WriteLine("Criando Tabela de Prefaturamentos...");
                                                                                     var CommandInsert8 = objConx08.CreateCommand();
-                                                                                    CommandInsert8.CommandText = "CREATE TABLE PREFATURAMENTOS (PREFATURAMENTO INT NOT NULL,NUMERO VARCHAR(30),DATA VARCHAR(20),FILIAL INT,CLIENTE INT,PEDIDOV INT,EXPEDICAO VARCHAR(1),DATA_EXPEDICAO VARCHAR(20),PODECONFERIR VARCHAR(1),DATA_PODECONFERIR VARCHAR(20),"
+                                                                                    CommandInsert8.CommandText = "CREATE TABLE PREFATURAMENTOS (PREFATURAMENTO INT NOT NULL,NUMERO VARCHAR(30),DATA VARCHAR(25),FILIAL INT,CLIENTE INT,PEDIDOV INT,EXPEDICAO VARCHAR(1),DATA_EXPEDICAO VARCHAR(20),PODECONFERIR VARCHAR(1),DATA_PODECONFERIR VARCHAR(20),"
                                                                                                                 + "CONFERINDO VARCHAR(1),CONFERIDO VARCHAR(1),DATACONFERIDO VARCHAR(20),ENTREGUE VARCHAR(1),TRANSPORTADORA VARCHAR(255),OBS_CLI_FAT VARCHAR(255));";
                                                                                     CommandInsert8.ExecuteNonQuery();
+
+                                                                                    Console.WriteLine("Criando Indice Tabela de Prefaturamentos...");
+                                                                                    var indicePrefat = objConx08.CreateCommand();
+                                                                                    indicePrefat.CommandText = "CREATE INDEX IDX_PREFATURAMENTOS ON PREFATURAMENTOS(PREFATURAMENTO,FILIAL,CLIENTE,PEDIDOV);";
+                                                                                    indicePrefat.ExecuteNonQuery();
+
                                                                                     objConx08.Close();
                                                                                 }
                                                                                 objConx08.Close();
@@ -1007,11 +1069,17 @@ namespace DashZonaCriativa
                                                                                             var CommandInsert9 = objConx09.CreateCommand();
                                                                                             CommandInsert9.CommandText = "CREATE TABLE PRODUTO_PREFAT (PRODUTO_PREFAT INT NOT NULL,PREFATURAMENTO INT,PRODUTO INT,ESTAMPA INT,COR INT,TAMANHO VARCHAR(5),QUANTIDADE INT,ENTREGUE INT,SAIDA INT);";
                                                                                             CommandInsert9.ExecuteNonQuery();
+
+                                                                                            Console.WriteLine("Criando Indice Tabela de Produto Prefaturamento...");
+                                                                                            var indicePpfat = objConx09.CreateCommand();
+                                                                                            indicePpfat.CommandText = "CREATE INDEX IDX_PRODUTO_PREFAT ON PRODUTO_PREFAT(PRODUTO_PREFAT,PREFATURAMENTO,PRODUTO,ESTAMPA,COR,TAMANHO);";
+                                                                                            indicePpfat.ExecuteNonQuery();
+
                                                                                             objConx09.Close();
                                                                                         }
                                                                                         objConx09.Close();
 
-                                                                                        var requisicaoWeb9 = WebRequest.CreateHttp($"{ConnectProdutosPrefat}" + "?$format=json");
+                                                                                        var requisicaoWeb9 = WebRequest.CreateHttp($"{ConnectProdutosPrefat}" + $"?data_inicial={Data_Inicial}" + "&$format=json");
                                                                                         requisicaoWeb9.Method = "GET";
                                                                                         requisicaoWeb9.Headers.Add("Authorization", $"{Authorization}");
                                                                                         requisicaoWeb9.UserAgent = "RequisicaoAPIGET";
@@ -1106,6 +1174,12 @@ namespace DashZonaCriativa
                                                                                                     var CommandInsert10 = objConx10.CreateCommand();
                                                                                                     CommandInsert10.CommandText = "CREATE TABLE TIPOS_PEDIDO (TIPO_PEDIDO INT NOT NULL,DESCRICAO VARCHAR(255));";
                                                                                                     CommandInsert10.ExecuteNonQuery();
+
+                                                                                                    Console.WriteLine("Criando Indice Tabela de Tipos Pedido...");
+                                                                                                    var indiceTipop = objConx10.CreateCommand();
+                                                                                                    indiceTipop.CommandText = "CREATE INDEX IDX_TIPOS_PEDIDO ON TIPOS_PEDIDO(TIPO_PEDIDO);";
+                                                                                                    indiceTipop.ExecuteNonQuery();
+
                                                                                                     objConx10.Close();
                                                                                                 }
                                                                                                 objConx10.Close();
@@ -1202,9 +1276,15 @@ namespace DashZonaCriativa
                                                                                                         {
                                                                                                             Console.WriteLine("Criando Tabela Pedido de Venda...");
                                                                                                             var CommandInsert11 = objConx11.CreateCommand();
-                                                                                                            CommandInsert11.CommandText = "CREATE TABLE PEDIDO_VENDA (PEDIDOV INT NOT NULL,COD_PEDIDOV VARCHAR(30),TIPO_PEDIDO INT,CLIENTE INT,CIDADE VARCHAR(255),ESTADO VARCHAR(5),REPRESENTANTE INT,DATA_EMISSAO VARCHAR(20),DATA_ENTREGA VARCHAR(20),ORCAMENTO VARCHAR(1),"
+                                                                                                            CommandInsert11.CommandText = "CREATE TABLE PEDIDO_VENDA (PEDIDOV INT NOT NULL,COD_PEDIDOV VARCHAR(30),TIPO_PEDIDO INT,CLIENTE INT,CIDADE VARCHAR(255),ESTADO VARCHAR(5),REPRESENTANTE INT,DATA_EMISSAO VARCHAR(25),DATA_ENTREGA VARCHAR(25),ORCAMENTO VARCHAR(1),"
                                                                                                                                          + "APROVADO VARCHAR(1),EFETUADO VARCHAR(1),QTDE_PEDIDA INT,QTDE_ENTREGAR INT,QTDE_ENTREGUE INT,QTDE_CANCELADA INT,VALOR_PEDIDO DECIMAL(14,2),VALOR_ENTREGAR DECIMAL(14,2),VALOR_ENTREGUE DECIMAL(14,2),VALOR_CANCELADO DECIMAL(14,2));";
                                                                                                             CommandInsert11.ExecuteNonQuery();
+
+                                                                                                            Console.WriteLine("Criando Indice Tabela de Pedido de Venda...");
+                                                                                                            var indicePedidov = objConx11.CreateCommand();
+                                                                                                            indicePedidov.CommandText = "CREATE INDEX IDX_PEDIDO_VENDA ON PEDIDO_VENDA(PEDIDOV,TIPO_PEDIDO,CLIENTE,REPRESENTANTE);";
+                                                                                                            indicePedidov.ExecuteNonQuery();
+
                                                                                                             objConx11.Close();
                                                                                                         }
                                                                                                         objConx11.Close();
@@ -1306,11 +1386,17 @@ namespace DashZonaCriativa
                                                                                                                     CommandInsert12.CommandText = "CREATE TABLE PRODUTO_PEDIDOV (PRODUTO_PV INT NOT NULL,PEDIDOV INT,PRODUTO INT,ESTAMPA INT,COR INT,TAMANHO VARCHAR(5),PRECO DECIMAL(14,2),QTDE_PEDIDA INT,QTDE_ENTREGAR INT,QTDE_ENTREGUE INT,QTDE_CANCELADA INT,VALOR_PEDIDO DECIMAL(14,2),"
                                                                                                                                                + "VALOR_ENTREGAR DECIMAL(14,2),VALOR_ENTREGUE DECIMAL(14,2),VALOR_CANCELADO DECIMAL(14,2));";
                                                                                                                     CommandInsert12.ExecuteNonQuery();
+
+                                                                                                                    Console.WriteLine("Criando Indice Tabela Produto Pedido Venda...");
+                                                                                                                    var indiceProdpv= objConx12.CreateCommand();
+                                                                                                                    indiceProdpv.CommandText = "CREATE INDEX IDX_PRODUTO_PEDIDOV ON PRODUTO_PEDIDOV(PRODUTO_PV,PEDIDOV,PRODUTO,ESTAMPA,COR,TAMANHO);";
+                                                                                                                    indiceProdpv.ExecuteNonQuery();
+
                                                                                                                     objConx12.Close();
                                                                                                                 }
                                                                                                                 objConx12.Close();
 
-                                                                                                                var requisicaoWeb12 = WebRequest.CreateHttp($"{ConnectProdutosPedidov}" + "?$format=json");
+                                                                                                                var requisicaoWeb12 = WebRequest.CreateHttp($"{ConnectProdutosPedidov}" + $"?data_inicial={DateIni}" + $"&data_final={DateFim}" + "&$format=json");
                                                                                                                 requisicaoWeb12.Method = "GET";
                                                                                                                 requisicaoWeb12.Headers.Add("Authorization", $"{Authorization}");
                                                                                                                 requisicaoWeb12.UserAgent = "RequisicaoAPIGET";
@@ -1406,6 +1492,12 @@ namespace DashZonaCriativa
                                                                                                                             CommandInsert13.CommandText = "CREATE TABLE NF (COD_OPERACAO INT NOT NULL,TIPO_OPERACAO VARCHAR(5),DATA VARCHAR(20),DATA_HORA VARCHAR(20),NOTA INT,SERIE VARCHAR(5),STATUS INT,VALOR DECIMAL(14, 2),ICMS DECIMAL(14,2),V_ICMS DECIMAL(14,2),ICMSS DECIMAL(14,2),"
                                                                                                                                                         + "V_ICMSS DECIMAL(14,2),IPI DECIMAL(14,2),V_IPI DECIMAL(14,2),FILIAL INT,IDNFE VARCHAR(80),CIDADE VARCHAR(255),ESTADO VARCHAR(5));";
                                                                                                                             CommandInsert13.ExecuteNonQuery();
+
+                                                                                                                            Console.WriteLine("Criando Indice Tabela NF...");
+                                                                                                                            var indiceNF = objConx13.CreateCommand();
+                                                                                                                            indiceNF.CommandText = "CREATE INDEX IDX_NF ON NF(COD_OPERACAO);";
+                                                                                                                            indiceNF.ExecuteNonQuery();
+
                                                                                                                             objConx13.Close();
                                                                                                                         }
                                                                                                                         objConx13.Close();

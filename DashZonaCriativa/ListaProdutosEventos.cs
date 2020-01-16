@@ -29,6 +29,12 @@ namespace ListaProdutosEventosAPI
         [JsonProperty("tipo_operacao")]
         public string TipoOperacao { get; set; }
 
+        [JsonProperty("pedido")]
+        public string Pedido { get; set; }
+
+        [JsonProperty("pre_faturamento")]
+        public string PreFaturamento { get; set; }
+
         [JsonProperty("produto")]
         public string Produto { get; set; }
 
