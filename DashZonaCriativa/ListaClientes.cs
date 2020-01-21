@@ -83,6 +83,9 @@ namespace ListaClientesAPI
 
         [JsonProperty("pais")]
         public object Pais { get; set; }
+
+        [JsonProperty("regiao")]
+        public object Regiao { get; set; }
     }
 
     public partial class ListaClientes

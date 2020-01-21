@@ -38,6 +38,9 @@ namespace ListaEntradasAPI
         [JsonProperty("cliente")]
         public int Cliente { get; set; }
 
+        [JsonProperty("fornecedor")]
+        public int Fornecedor { get; set; }
+
         [JsonProperty("cod_endereco")]
         public int CodigoEndereco { get; set; }
 

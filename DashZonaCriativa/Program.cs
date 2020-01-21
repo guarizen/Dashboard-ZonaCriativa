@@ -409,12 +409,12 @@ namespace DashZonaCriativa
                                             var CommandInsert3 = objConx03.CreateCommand();
                                             CommandInsert3.CommandText = "CREATE TABLE CLIENTES (CLIENTE INT NOT NULL,COD_CLIENTE VARCHAR(30),NOME VARCHAR(255),FANTASIA VARCHAR(255),CGC VARCHAR(30),CNPJ VARCHAR(30),IE VARCHAR(30),PF_PJ VARCHAR(5),TIPO_EMPRESA VARCHAR(60),"
                                                                         + "E_MAIL VARCHAR(255),E_MAIL_NFE VARCHAR(255),GRUPO_LOJA VARCHAR(255),REPRESENTANTE INT,COD_ENDERECO INT,ENDERECO VARCHAR(255),BAIRRO VARCHAR(255),CIDADE VARCHAR(255),ESTADO VARCHAR(2),CEP VARCHAR(12),"
-                                                                        + "PAIS VARCHAR(255));";
+                                                                        + "PAIS VARCHAR(255),REGIAO VARCHAR(255));";
                                             CommandInsert3.ExecuteNonQuery();
 
                                             Console.WriteLine("Criando Indice Tabela de Clientes...");
                                             var indiceCli = objConx03.CreateCommand();
-                                            indiceCli.CommandText = "CREATE INDEX IDX_CLIENTES ON CLIENTES(CLIENTE);";
+                                            indiceCli.CommandText = "CREATE INDEX IDX_CLIENTES ON CLIENTES(CLIENTE,COD_CLIENTE,COD_ENDERECO);";
                                             indiceCli.ExecuteNonQuery();
 
                                             objConx03.Close();
@@ -458,11 +458,11 @@ namespace DashZonaCriativa
                                                     }
 
                                                     var command3 = objConx3.CreateCommand();
-                                                    command3.CommandText = "INSERT INTO CLIENTES (CLIENTE,COD_CLIENTE,NOME,FANTASIA,CGC,CNPJ,IE,PF_PJ,TIPO_EMPRESA,E_MAIL,E_MAIL_NFE,GRUPO_LOJA,REPRESENTANTE,COD_ENDERECO,ENDERECO,BAIRRO,CIDADE,ESTADO,CEP,PAIS)" +
+                                                    command3.CommandText = "INSERT INTO CLIENTES (CLIENTE,COD_CLIENTE,NOME,FANTASIA,CGC,CNPJ,IE,PF_PJ,TIPO_EMPRESA,E_MAIL,E_MAIL_NFE,GRUPO_LOJA,REPRESENTANTE,COD_ENDERECO,ENDERECO,BAIRRO,CIDADE,ESTADO,CEP,PAIS,REGIAO)" +
                                                                                 $"VALUES({Cl.Cliente}," + $"\"{Cl.CodCliente}\"," + $"\"{Cl.Nome}\", " + $"\"{Cl.Fantasia}\", "
                                                                                 + $"\"{Cl.Cgc}\", " + $"\"{Cl.Cnpj}\", " + $"\"{Cl.Ie}\", " + $"\"{Cl.PfPj}\"," + $"\"{Cl.TipoEmpresa}\", " + $"\"{Cl.EMail}\"," + $"\"{Cl.EMailNfe}\", "
                                                                                 + $"\"{Cl.GrupoLoja}\", " + $"\"{Cl.Representante}\"," + $"\"{Cl.CodEndereco}\"," + $"\"{Cl.Endereco}\"," + $"\"{Cl.Bairro}\"," + $"\"{Cl.Cidade}\","
-                                                                                + $"\"{Cl.Estado}\"," + $"\"{Cl.Cep}\"," + $"\"{Cl.Pais}\")";
+                                                                                + $"\"{Cl.Estado}\"," + $"\"{Cl.Cep}\"," + $"\"{Cl.Pais}\"," + $"\"{Cl.Regiao}\")";
 
                                                     command3.ExecuteNonQuery();
                                                     objConx3.Close();
@@ -628,7 +628,7 @@ namespace DashZonaCriativa
                                                         {
                                                             Console.WriteLine("Criando Tabela de Saidas...");
                                                             var CommandInsert5 = objConx05.CreateCommand();
-                                                            CommandInsert5.CommandText = "CREATE TABLE SAIDAS (COD_OPERACAO INT NOT NULL,TIPO_OPERACAO VARCHAR(5),EVENTO INT,ROMANEIO VARCHAR(60),DATA VARCHAR(25),CLIENTE INT,COD_ENDERECO INT,CONDICOES_PGTO VARCHAR(255),"
+                                                            CommandInsert5.CommandText = "CREATE TABLE SAIDAS (COD_OPERACAO INT NOT NULL,TIPO_OPERACAO VARCHAR(5),EVENTO INT,ROMANEIO VARCHAR(60),DATA DATE,CLIENTE INT,COD_ENDERECO INT,CONDICOES_PGTO VARCHAR(255),"
                                                                                         + "FILIAL INT,CONTA INT,REPRESENTANTE INT,TRANSPORTADORA VARCHAR(255),PESO_B VARCHAR(25),PESO_L VARCHAR(25),QTDE INT,TOTAL DECIMAL(14, 2),V_FRETE DECIMAL(14,2),VALOR_JUROS DECIMAL(14,2),"
                                                                                         + "VALOR_FINAL DECIMAL(14,2),ESPECIE_VOLUME VARCHAR(255),VOLUME VARCHAR(25));";
                                                             CommandInsert5.ExecuteNonQuery();
@@ -678,9 +678,13 @@ namespace DashZonaCriativa
                                                                         s++;
                                                                     }
 
+                                                                    string iDateD = $"{sd.Data}";
+                                                                    DateTime eDate = DateTime.Parse(iDateD);
+                                                                    string DateD = (eDate.Year + "-" + eDate.Month + "-" + eDate.Day);
+
                                                                     var command5 = objConx5.CreateCommand();
                                                                     command5.CommandText = "INSERT INTO SAIDAS (COD_OPERACAO,TIPO_OPERACAO,EVENTO,ROMANEIO,DATA,CLIENTE,COD_ENDERECO,CONDICOES_PGTO,FILIAL,CONTA,REPRESENTANTE,TRANSPORTADORA,PESO_B,PESO_L,QTDE,TOTAL,V_FRETE,VALOR_JUROS,VALOR_FINAL,ESPECIE_VOLUME,VOLUME)" +
-                                                                                                $"VALUES({sd.CodOperacao}," + $"\"{sd.TipoOperacao}\"," + $"\"{sd.Evento}\", " + $"\"{sd.Romaneio}\", " + $"\"{sd.Data}\", "
+                                                                                                $"VALUES({sd.CodOperacao}," + $"\"{sd.TipoOperacao}\"," + $"\"{sd.Evento}\", " + $"\"{sd.Romaneio}\", " + $"\"{DateD}\", "
                                                                                                 + $"\"{sd.Cliente}\", " + $"\"{sd.CodigoEndereco}\", " + $"\"{sd.CondicoesPgto}\", " + $"{sd.Filial}, " + $"{sd.Conta}," + $"{sd.Representante},"
                                                                                                 + $"\"{sd.Transportadora}\"," + $"\"{sd.PesoB}\"," + $"\"{sd.PesoL}\"," + $"{sd.Qtde}," + $"\"{sd.Total}\", "
                                                                                                 + $"\"{sd.VFrete}\"," + $"\"{sd.ValorJuros}\"," + $"\"{sd.ValorFinal}\"," + $"\"{sd.EspecieVolume}\"," + $"\"{sd.Volume}\")";
@@ -739,14 +743,14 @@ namespace DashZonaCriativa
                                                                 {
                                                                     Console.WriteLine("Criando Tabela de Entradas...");
                                                                     var CommandInsert6 = objConx06.CreateCommand();
-                                                                    CommandInsert6.CommandText = "CREATE TABLE ENTRADAS (COD_OPERACAO INT NOT NULL,TIPO_OPERACAO VARCHAR(5),EVENTO INT,ROMANEIO VARCHAR(60),DATA VARCHAR(25),CLIENTE INT,COD_ENDERECO INT,CONDICOES_PGTO VARCHAR(255),FILIAL INT,"
+                                                                    CommandInsert6.CommandText = "CREATE TABLE ENTRADAS (COD_OPERACAO INT NOT NULL,TIPO_OPERACAO VARCHAR(5),EVENTO INT,ROMANEIO VARCHAR(60),DATA DATE,CLIENTE INT,FORNECEDOR INT,COD_ENDERECO INT,CONDICOES_PGTO VARCHAR(255),FILIAL INT,"
                                                                                                 + "CONTA INT,REPRESENTANTE INT,TRANSPORTADORA VARCHAR(255),PESO_B VARCHAR(25),PESO_L VARCHAR(25),QTDE INT,TOTAL DECIMAL(14, 2),V_FRETE DECIMAL(14,2),VALOR_JUROS DECIMAL(14,2),VALOR_FINAL DECIMAL(14,2),"
                                                                                                 + "ESPECIE_VOLUME VARCHAR(255),VOLUME VARCHAR(25));";
                                                                     CommandInsert6.ExecuteNonQuery();
 
                                                                     Console.WriteLine("Criando Indice Tabela de Entradas...");
                                                                     var indiceEnt = objConx06.CreateCommand();
-                                                                    indiceEnt.CommandText = "CREATE INDEX IDX_ENTRADAS ON ENTRADAS(COD_OPERACAO,CLIENTE);";
+                                                                    indiceEnt.CommandText = "CREATE INDEX IDX_ENTRADAS ON ENTRADAS(COD_OPERACAO,CLIENTE,EVENTO);";
                                                                     indiceEnt.ExecuteNonQuery();
 
                                                                     objConx06.Close();
@@ -789,10 +793,14 @@ namespace DashZonaCriativa
                                                                                 en++;
                                                                             }
 
+                                                                            string iDateD = $"{ed.Data}";
+                                                                            DateTime eDate = DateTime.Parse(iDateD);
+                                                                            string DateD = (eDate.Year + "-" + eDate.Month + "-" + eDate.Day);
+
                                                                             var command6 = objConx6.CreateCommand();
-                                                                            command6.CommandText = "INSERT INTO ENTRADAS (COD_OPERACAO,TIPO_OPERACAO,EVENTO,ROMANEIO,DATA,CLIENTE,COD_ENDERECO,CONDICOES_PGTO,FILIAL,CONTA,REPRESENTANTE,TRANSPORTADORA,PESO_B,PESO_L,QTDE,TOTAL,V_FRETE,VALOR_JUROS,VALOR_FINAL,ESPECIE_VOLUME,VOLUME)" +
-                                                                                                        $"VALUES({ed.CodOperacao}," + $"\"{ed.TipoOperacao}\"," + $"\"{ed.Evento}\", " + $"\"{ed.Romaneio}\", " + $"\"{ed.Data}\", "
-                                                                                                        + $"\"{ed.Cliente}\", " + $"\"{ed.CodigoEndereco}\", " + $"\"{ed.CondicoesPgto}\", " + $"{ed.Filial}, " + $"{ed.Conta}," + $"{ed.Representante},"
+                                                                            command6.CommandText = "INSERT INTO ENTRADAS (COD_OPERACAO,TIPO_OPERACAO,EVENTO,ROMANEIO,DATA,CLIENTE,FORNECEDOR,COD_ENDERECO,CONDICOES_PGTO,FILIAL,CONTA,REPRESENTANTE,TRANSPORTADORA,PESO_B,PESO_L,QTDE,TOTAL,V_FRETE,VALOR_JUROS,VALOR_FINAL,ESPECIE_VOLUME,VOLUME)" +
+                                                                                                        $"VALUES({ed.CodOperacao}," + $"\"{ed.TipoOperacao}\"," + $"\"{ed.Evento}\", " + $"\"{ed.Romaneio}\", " + $"\"{DateD}\", "
+                                                                                                        + $"\"{ed.Cliente}\", " + $"\"{ed.Fornecedor}\", " + $"\"{ed.CodigoEndereco}\", " + $"\"{ed.CondicoesPgto}\", " + $"{ed.Filial}, " + $"{ed.Conta}," + $"{ed.Representante},"
                                                                                                         + $"\"{ed.Transportadora}\"," + $"\"{ed.PesoB}\"," + $"\"{ed.PesoL}\"," + $"{ed.Qtde}," + $"\"{ed.Total}\", "
                                                                                                         + $"\"{ed.VFrete}\"," + $"\"{ed.ValorJuros}\"," + $"\"{ed.ValorFinal}\"," + $"\"{ed.EspecieVolume}\"," + $"\"{ed.Volume}\")";
 
@@ -958,7 +966,7 @@ namespace DashZonaCriativa
                                                                                 {
                                                                                     Console.WriteLine("Criando Tabela de Prefaturamentos...");
                                                                                     var CommandInsert8 = objConx08.CreateCommand();
-                                                                                    CommandInsert8.CommandText = "CREATE TABLE PREFATURAMENTOS (PREFATURAMENTO INT NOT NULL,NUMERO VARCHAR(30),DATA VARCHAR(25),FILIAL INT,CLIENTE INT,PEDIDOV INT,EXPEDICAO VARCHAR(1),DATA_EXPEDICAO VARCHAR(20),PODECONFERIR VARCHAR(1),DATA_PODECONFERIR VARCHAR(20),"
+                                                                                    CommandInsert8.CommandText = "CREATE TABLE PREFATURAMENTOS (PREFATURAMENTO INT NOT NULL,NUMERO VARCHAR(30),DATA DATE,FILIAL INT,CLIENTE INT,PEDIDOV INT,EXPEDICAO VARCHAR(1),DATA_EXPEDICAO VARCHAR(20),PODECONFERIR VARCHAR(1),DATA_PODECONFERIR VARCHAR(20),"
                                                                                                                 + "CONFERINDO VARCHAR(1),CONFERIDO VARCHAR(1),DATACONFERIDO VARCHAR(20),ENTREGUE VARCHAR(1),TRANSPORTADORA VARCHAR(255),OBS_CLI_FAT VARCHAR(255));";
                                                                                     CommandInsert8.ExecuteNonQuery();
 
@@ -1007,9 +1015,13 @@ namespace DashZonaCriativa
                                                                                                 pref++;
                                                                                             }
 
+                                                                                            string iDateD = $"{ptf.Data}";
+                                                                                            DateTime eDate = DateTime.Parse(iDateD);
+                                                                                            string DateF = (eDate.Year + "-" + eDate.Month + "-" + eDate.Day);
+
                                                                                             var command8 = objConx8.CreateCommand();
                                                                                             command8.CommandText = "INSERT INTO PREFATURAMENTOS (PREFATURAMENTO,NUMERO,DATA,FILIAL,CLIENTE,PEDIDOV,EXPEDICAO,DATA_EXPEDICAO,PODECONFERIR,DATA_PODECONFERIR,CONFERINDO,CONFERIDO,DATACONFERIDO,ENTREGUE,TRANSPORTADORA,OBS_CLI_FAT)" +
-                                                                                                                        $"VALUES({ptf.Prefaturamento}," + $"\"{ptf.Numero}\", " + $"\"{ptf.Data}\", " + $"{ptf.Filial}," + $"{ptf.Cliente},"
+                                                                                                                        $"VALUES({ptf.Prefaturamento}," + $"\"{ptf.Numero}\", " + $"\"{DateF}\", " + $"{ptf.Filial}," + $"{ptf.Cliente},"
                                                                                                                         + $"{ptf.Pedidov}," + $"\"{ptf.Expedicao}\"," + $"\"{ptf.DataExpedicao}\", " + $"\"{ptf.Podeconferir}\", " + $"\"{ptf.DataPodeconferir}\", " + $"\"{ptf.Conferindo}\","
                                                                                                                         + $"\"{ptf.Conferido}\"," + $"\"{ptf.Dataconferido}\"," + $"\"{ptf.Entregue}\"," + $"\"{ptf.Transportadora}\"," + $"\"{ptf.ObsCliFat}\")";
 
@@ -1079,7 +1091,7 @@ namespace DashZonaCriativa
                                                                                         }
                                                                                         objConx09.Close();
 
-                                                                                        var requisicaoWeb9 = WebRequest.CreateHttp($"{ConnectProdutosPrefat}" + $"?data_inicial={Data_Inicial}" + "&$format=json");
+                                                                                        var requisicaoWeb9 = WebRequest.CreateHttp($"{ConnectProdutosPrefat}" + $"?data_inicial={DateIni}" + "&$format=json");
                                                                                         requisicaoWeb9.Method = "GET";
                                                                                         requisicaoWeb9.Headers.Add("Authorization", $"{Authorization}");
                                                                                         requisicaoWeb9.UserAgent = "RequisicaoAPIGET";
@@ -1276,7 +1288,7 @@ namespace DashZonaCriativa
                                                                                                         {
                                                                                                             Console.WriteLine("Criando Tabela Pedido de Venda...");
                                                                                                             var CommandInsert11 = objConx11.CreateCommand();
-                                                                                                            CommandInsert11.CommandText = "CREATE TABLE PEDIDO_VENDA (PEDIDOV INT NOT NULL,COD_PEDIDOV VARCHAR(30),TIPO_PEDIDO INT,CLIENTE INT,CIDADE VARCHAR(255),ESTADO VARCHAR(5),REPRESENTANTE INT,DATA_EMISSAO VARCHAR(25),DATA_ENTREGA VARCHAR(25),ORCAMENTO VARCHAR(1),"
+                                                                                                            CommandInsert11.CommandText = "CREATE TABLE PEDIDO_VENDA (PEDIDOV INT NOT NULL,COD_PEDIDOV VARCHAR(30),TIPO_PEDIDO INT,CLIENTE INT,CIDADE VARCHAR(255),ESTADO VARCHAR(5),REPRESENTANTE INT,DATA_EMISSAO DATE,DATA_ENTREGA DATE,ORCAMENTO VARCHAR(1),"
                                                                                                                                          + "APROVADO VARCHAR(1),EFETUADO VARCHAR(1),QTDE_PEDIDA INT,QTDE_ENTREGAR INT,QTDE_ENTREGUE INT,QTDE_CANCELADA INT,VALOR_PEDIDO DECIMAL(14,2),VALOR_ENTREGAR DECIMAL(14,2),VALOR_ENTREGUE DECIMAL(14,2),VALOR_CANCELADO DECIMAL(14,2));";
                                                                                                             CommandInsert11.ExecuteNonQuery();
 
@@ -1324,10 +1336,19 @@ namespace DashZonaCriativa
                                                                                                                         pvv++;
                                                                                                                     }
 
+                                                                                                                    string iDateEmissao = $"{pvp.DataEmissao}";
+                                                                                                                    DateTime eDate = DateTime.Parse(iDateEmissao);
+                                                                                                                    string DateEmi = (eDate.Year + "-" + eDate.Month + "-" + eDate.Day);
+
+                                                                                                                    string iDateEntrega = $"{pvp.DataEntrega}";
+                                                                                                                    DateTime gDate = DateTime.Parse(iDateEntrega);
+                                                                                                                    string DateEnt = (gDate.Year + "-" + gDate.Month + "-" + gDate.Day);
+
+
                                                                                                                     var command011 = objConx011.CreateCommand();
                                                                                                                     command011.CommandText = "INSERT INTO PEDIDO_VENDA (PEDIDOV,COD_PEDIDOV,TIPO_PEDIDO,CLIENTE,CIDADE,ESTADO,REPRESENTANTE,DATA_EMISSAO,DATA_ENTREGA,ORCAMENTO,APROVADO,EFETUADO,QTDE_PEDIDA,QTDE_ENTREGAR,QTDE_ENTREGUE,QTDE_CANCELADA,VALOR_PEDIDO,VALOR_ENTREGAR,VALOR_ENTREGUE,VALOR_CANCELADO)" +
                                                                                                                                                 $"VALUES({pvp.Pedidov}," + $"\"{pvp.CodPedidov}\"," + $"{pvp.TipoPedido}," + $"{pvp.Cliente}," + $"\"{pvp.Cidade}\"," + $"\"{pvp.Estado}\"," + $"{pvp.Representante},"
-                                                                                                                                                + $"\"{pvp.DataEmissao}\"," + $"\"{pvp.DataEntrega}\"," + $"\"{pvp.Orcamento}\"," + $"\"{pvp.Aprovado}\"," + $"\"{pvp.Efetuado}\"," + $"{pvp.QtdePedida},"
+                                                                                                                                                + $"\"{DateEmi}\"," + $"\"{DateEnt}\"," + $"\"{pvp.Orcamento}\"," + $"\"{pvp.Aprovado}\"," + $"\"{pvp.Efetuado}\"," + $"{pvp.QtdePedida},"
                                                                                                                                                 + $"{pvp.QtdeEntregar}," + $"{pvp.QtdeEntregue}," + $"{pvp.QtdeCancelada}," + $"{pvp.ValorPedido}," + $"{pvp.ValorEntregar}," + $"{pvp.ValorEntregue}," + $"{pvp.ValorCancelado}" + ")";
 
                                                                                                                     command011.ExecuteNonQuery();
@@ -1489,7 +1510,7 @@ namespace DashZonaCriativa
                                                                                                                         {
                                                                                                                             Console.WriteLine("Criando Tabela de Notas Fiscais...");
                                                                                                                             var CommandInsert13 = objConx13.CreateCommand();
-                                                                                                                            CommandInsert13.CommandText = "CREATE TABLE NF (COD_OPERACAO INT NOT NULL,TIPO_OPERACAO VARCHAR(5),DATA VARCHAR(20),DATA_HORA VARCHAR(20),NOTA INT,SERIE VARCHAR(5),STATUS INT,VALOR DECIMAL(14, 2),ICMS DECIMAL(14,2),V_ICMS DECIMAL(14,2),ICMSS DECIMAL(14,2),"
+                                                                                                                            CommandInsert13.CommandText = "CREATE TABLE NF (COD_OPERACAO INT NOT NULL,TIPO_OPERACAO VARCHAR(5),DATA DATE,DATA_HORA VARCHAR(20),NOTA INT,SERIE VARCHAR(5),STATUS INT,VALOR DECIMAL(14, 2),ICMS DECIMAL(14,2),V_ICMS DECIMAL(14,2),ICMSS DECIMAL(14,2),"
                                                                                                                                                         + "V_ICMSS DECIMAL(14,2),IPI DECIMAL(14,2),V_IPI DECIMAL(14,2),FILIAL INT,IDNFE VARCHAR(80),CIDADE VARCHAR(255),ESTADO VARCHAR(5));";
                                                                                                                             CommandInsert13.ExecuteNonQuery();
 
@@ -1537,9 +1558,13 @@ namespace DashZonaCriativa
                                                                                                                                         nfo++;
                                                                                                                                     }
 
+                                                                                                                                    string iDateD = $"{nfl.Data}";
+                                                                                                                                    DateTime eDate = DateTime.Parse(iDateD);
+                                                                                                                                    string DateN = (eDate.Year + "-" + eDate.Month + "-" + eDate.Day);
+
                                                                                                                                     var command013 = objConx013.CreateCommand();
                                                                                                                                     command013.CommandText = "INSERT INTO NF (COD_OPERACAO,TIPO_OPERACAO,DATA,DATA_HORA,NOTA,SERIE,STATUS,VALOR,ICMS,V_ICMS,ICMSS,V_ICMSS,IPI,V_IPI,FILIAL,IDNFE,CIDADE,ESTADO)" +
-                                                                                                                                                                $"VALUES({nfl.CodOperacao}," + $"\"{nfl.TipoOperacao}\"," + $"\"{nfl.Data}\"," + $"\"{nfl.DataHora}\"," + $"{nfl.Nota}," + $"\"{nfl.Serie}\"," + $"{nfl.Status}," + $"{nfl.Valor}," + $"{nfl.Icms}," + $"{nfl.VIcms},"
+                                                                                                                                                                $"VALUES({nfl.CodOperacao}," + $"\"{nfl.TipoOperacao}\"," + $"\"{DateN}\"," + $"\"{nfl.DataHora}\"," + $"{nfl.Nota}," + $"\"{nfl.Serie}\"," + $"{nfl.Status}," + $"{nfl.Valor}," + $"{nfl.Icms}," + $"{nfl.VIcms},"
                                                                                                                                                                 + $"{nfl.Icmss}," + $"{nfl.VIcmss}," + $"{nfl.Ipi}," + $"{nfl.VIpi}," + $"{nfl.Filial}," + $"\"{nfl.Idnfe}\"," + $"\"{nfl.Cidade}\"," + $"\"{nfl.Estado}\")";
 
                                                                                                                                     command013.ExecuteNonQuery();
