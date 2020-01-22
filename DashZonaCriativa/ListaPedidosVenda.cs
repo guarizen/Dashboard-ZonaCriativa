@@ -38,6 +38,9 @@ namespace ListaPedidosVendaAPI
         [JsonProperty("estado")]
         public string Estado { get; set; }
 
+        [JsonProperty("cod_endereco")]
+        public string Cod_Endereco { get; set; }
+
         [JsonProperty("representante")]
         public long? Representante { get; set; }
 

@@ -1288,13 +1288,13 @@ namespace DashZonaCriativa
                                                                                                         {
                                                                                                             Console.WriteLine("Criando Tabela Pedido de Venda...");
                                                                                                             var CommandInsert11 = objConx11.CreateCommand();
-                                                                                                            CommandInsert11.CommandText = "CREATE TABLE PEDIDO_VENDA (PEDIDOV INT NOT NULL,COD_PEDIDOV VARCHAR(30),TIPO_PEDIDO INT,CLIENTE INT,CIDADE VARCHAR(255),ESTADO VARCHAR(5),REPRESENTANTE INT,DATA_EMISSAO DATE,DATA_ENTREGA DATE,ORCAMENTO VARCHAR(1),"
+                                                                                                            CommandInsert11.CommandText = "CREATE TABLE PEDIDO_VENDA (PEDIDOV INT NOT NULL,COD_PEDIDOV VARCHAR(30),TIPO_PEDIDO INT,CLIENTE INT,CIDADE VARCHAR(255),ESTADO VARCHAR(5),COD_ENDERECO INT,REPRESENTANTE INT,DATA_EMISSAO DATE,DATA_ENTREGA DATE,ORCAMENTO VARCHAR(1),"
                                                                                                                                          + "APROVADO VARCHAR(1),EFETUADO VARCHAR(1),QTDE_PEDIDA INT,QTDE_ENTREGAR INT,QTDE_ENTREGUE INT,QTDE_CANCELADA INT,VALOR_PEDIDO DECIMAL(14,2),VALOR_ENTREGAR DECIMAL(14,2),VALOR_ENTREGUE DECIMAL(14,2),VALOR_CANCELADO DECIMAL(14,2));";
                                                                                                             CommandInsert11.ExecuteNonQuery();
 
                                                                                                             Console.WriteLine("Criando Indice Tabela de Pedido de Venda...");
                                                                                                             var indicePedidov = objConx11.CreateCommand();
-                                                                                                            indicePedidov.CommandText = "CREATE INDEX IDX_PEDIDO_VENDA ON PEDIDO_VENDA(PEDIDOV,TIPO_PEDIDO,CLIENTE,REPRESENTANTE);";
+                                                                                                            indicePedidov.CommandText = "CREATE INDEX IDX_PEDIDO_VENDA ON PEDIDO_VENDA(PEDIDOV,TIPO_PEDIDO,CLIENTE,REPRESENTANTE,COD_ENDERECO);";
                                                                                                             indicePedidov.ExecuteNonQuery();
 
                                                                                                             objConx11.Close();
@@ -1346,8 +1346,8 @@ namespace DashZonaCriativa
 
 
                                                                                                                     var command011 = objConx011.CreateCommand();
-                                                                                                                    command011.CommandText = "INSERT INTO PEDIDO_VENDA (PEDIDOV,COD_PEDIDOV,TIPO_PEDIDO,CLIENTE,CIDADE,ESTADO,REPRESENTANTE,DATA_EMISSAO,DATA_ENTREGA,ORCAMENTO,APROVADO,EFETUADO,QTDE_PEDIDA,QTDE_ENTREGAR,QTDE_ENTREGUE,QTDE_CANCELADA,VALOR_PEDIDO,VALOR_ENTREGAR,VALOR_ENTREGUE,VALOR_CANCELADO)" +
-                                                                                                                                                $"VALUES({pvp.Pedidov}," + $"\"{pvp.CodPedidov}\"," + $"{pvp.TipoPedido}," + $"{pvp.Cliente}," + $"\"{pvp.Cidade}\"," + $"\"{pvp.Estado}\"," + $"{pvp.Representante},"
+                                                                                                                    command011.CommandText = "INSERT INTO PEDIDO_VENDA (PEDIDOV,COD_PEDIDOV,TIPO_PEDIDO,CLIENTE,CIDADE,ESTADO,COD_ENDERECO,REPRESENTANTE,DATA_EMISSAO,DATA_ENTREGA,ORCAMENTO,APROVADO,EFETUADO,QTDE_PEDIDA,QTDE_ENTREGAR,QTDE_ENTREGUE,QTDE_CANCELADA,VALOR_PEDIDO,VALOR_ENTREGAR,VALOR_ENTREGUE,VALOR_CANCELADO)" +
+                                                                                                                                                $"VALUES({pvp.Pedidov}," + $"\"{pvp.CodPedidov}\"," + $"{pvp.TipoPedido}," + $"{pvp.Cliente}," + $"\"{pvp.Cidade}\"," + $"\"{pvp.Estado}\"," + $"{pvp.Cod_Endereco}," + $"{pvp.Representante},"
                                                                                                                                                 + $"\"{DateEmi}\"," + $"\"{DateEnt}\"," + $"\"{pvp.Orcamento}\"," + $"\"{pvp.Aprovado}\"," + $"\"{pvp.Efetuado}\"," + $"{pvp.QtdePedida},"
                                                                                                                                                 + $"{pvp.QtdeEntregar}," + $"{pvp.QtdeEntregue}," + $"{pvp.QtdeCancelada}," + $"{pvp.ValorPedido}," + $"{pvp.ValorEntregar}," + $"{pvp.ValorEntregue}," + $"{pvp.ValorCancelado}" + ")";
 
