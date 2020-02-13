@@ -63,16 +63,16 @@ namespace ListaPedidosCompraAPI
         public long QtdeCancelada { get; set; }
 
         [JsonProperty("valor_pedido")]
-        public long ValorPedido { get; set; }
+        public string ValorPedido { get; set; }
 
         [JsonProperty("valor_entregar")]
-        public long ValorEntregar { get; set; }
+        public string ValorEntregar { get; set; }
 
         [JsonProperty("valor_entregue")]
-        public long ValorEntregue { get; set; }
+        public string ValorEntregue { get; set; }
 
         [JsonProperty("valor_cancelado")]
-        public long ValorCancelado { get; set; }
+        public string ValorCancelado { get; set; }
     }
 
     public partial class ListaPedidosCompra

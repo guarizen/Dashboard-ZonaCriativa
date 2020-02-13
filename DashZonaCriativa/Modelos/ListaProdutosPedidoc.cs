@@ -39,7 +39,7 @@ namespace ListaProdutosPedidocAPI
         public string Tamanho { get; set; }
 
         [JsonProperty("preco")]
-        public long Preco { get; set; }
+        public string Preco { get; set; }
 
         [JsonProperty("qtde_pedida")]
         public long QtdePedida { get; set; }
@@ -54,16 +54,16 @@ namespace ListaProdutosPedidocAPI
         public long QtdeCancelada { get; set; }
 
         [JsonProperty("valor_pedido")]
-        public long ValorPedido { get; set; }
+        public string ValorPedido { get; set; }
 
         [JsonProperty("valor_entregar")]
-        public long ValorEntregar { get; set; }
+        public string ValorEntregar { get; set; }
 
         [JsonProperty("valor_entregue")]
-        public long ValorEntregue { get; set; }
+        public string ValorEntregue { get; set; }
 
         [JsonProperty("valor_cancelado")]
-        public long ValorCancelado { get; set; }
+        public string ValorCancelado { get; set; }
     }
 
     public partial class ListaProdutosPedidoc
