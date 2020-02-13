@@ -10,6 +10,7 @@ using DashZonaCriativa.TiposPedidos;
 using DashZonaCriativa.PedidosVenda;
 using DashZonaCriativa.NotasFiscais;
 using ListaPrecosAPI;
+using DashZonaCriativa.PedidoCompra;
 
 namespace DashZonaCriativa
 {
@@ -54,10 +55,16 @@ namespace DashZonaCriativa
             PedidoVendaGet pv12 = new PedidoVendaGet();
 
             //Busca Produto dos Pedidos de Venda e Inclui no Banco de Dados MYSQL.
-            ProdutoPedidoGet ppv13 = new ProdutoPedidoGet();
+            ProdutoPedidoVendaGet ppv13 = new ProdutoPedidoVendaGet();
 
             //Busca Notas Fiscais e Inclui no Banco de Dados MYSQL.
             NotasFiscaisGet nf14 = new NotasFiscaisGet();
+
+            //Busca Pedidos de Compra e Inclui no Banco de dados MYSQL.
+            PedidoCompraGet pc15 = new PedidoCompraGet();
+
+            //Busca Produto dos Pedidos de Compra e Inclui no Banco de Dados MYSQL.
+            ProdutoPedidoCompraGet ppc16 = new ProdutoPedidoCompraGet();
         }
     }
 }

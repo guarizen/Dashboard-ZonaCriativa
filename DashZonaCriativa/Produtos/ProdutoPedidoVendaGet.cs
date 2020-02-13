@@ -11,9 +11,9 @@ using System.Threading.Tasks;
 
 namespace DashZonaCriativa.Produtos
 {
-    class ProdutoPedidoGet
+    class ProdutoPedidoVendaGet
     {
-        public ProdutoPedidoGet()
+        public ProdutoPedidoVendaGet()
         {
             var ConnectMySQLDB = ConfigurationManager.AppSettings["ConnectMySQLDB"];
             var DatabaseMySQLDB = ConfigurationManager.AppSettings["DatabaseMySQLDB"];
